@@ -6,9 +6,11 @@ use token;
 
 const PROMPT: &'static str = ">> ";
 
-pub fn start<R: io::BufRead, W: io::Write>(mut reader: R, _write: W) -> io::Result<!> {
+pub fn start<R, W>(mut reader: R, mut writer: W) -> io::Result<!>
+    where R: io::BufRead, W: io::Write {
     loop {
-        print!("{}", PROMPT);
+        write!(writer, "{}", PROMPT);
+        writer.flush()?;
         let mut line = String::new();
         reader.read_line(&mut line)?;
         if let Ok(ascii_line) = AsciiString::from_str(&line) {
@@ -18,10 +20,10 @@ pub fn start<R: io::BufRead, W: io::Write>(mut reader: R, _write: W) -> io::Resu
                 tok = lex.next_token();
                 tok.token_type != token::EOF
             } {
-                println!("{:?}", tok);
+                writeln!(writer, "{:?}", tok);
             }
         } else {
-            println!("[ERROR] please input only ASCII string");
+            writeln!(writer, "[ERROR] please input only ASCII string");
         }
     }
 }
