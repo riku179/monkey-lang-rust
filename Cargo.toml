@@ -1,0 +1,8 @@
+[package]
+name = "monkey_lang"
+version = "0.1.0"
+authors = ["Riku Inoue <riku.inoue@shiroyagi.co.jp>"]
+
+[dependencies]
+ascii = "0.9"
+lazy_static = "1.1.0"
