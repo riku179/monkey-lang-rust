@@ -1,4 +1,4 @@
-use ascii::{AsciiString, AsciiChar};
+use ascii::{AsciiChar, AsciiString};
 use token;
 
 #[derive(Debug)]
@@ -45,12 +45,12 @@ impl Lexer {
                     literal.push(self.ch);
                     tok = token::Token {
                         token_type: token::EQ,
-                        literal
+                        literal,
                     };
                 } else {
                     tok = token::Token::new(token::ASSIGN, self.ch)
                 }
-            },
+            }
             AsciiChar::Semicolon => tok = token::Token::new(token::SEMICOLON, self.ch),
             AsciiChar::ParenOpen => tok = token::Token::new(token::LPAREN, self.ch),
             AsciiChar::ParenClose => tok = token::Token::new(token::RPAREN, self.ch),
@@ -68,12 +68,12 @@ impl Lexer {
                     literal.push(self.ch);
                     tok = token::Token {
                         token_type: token::NOT_EQ,
-                        literal
+                        literal,
                     };
                 } else {
                     tok = token::Token::new(token::BANG, self.ch)
                 }
-            },
+            }
             AsciiChar::Slash => tok = token::Token::new(token::SLASH, self.ch),
             AsciiChar::Asterisk => tok = token::Token::new(token::ASTERISK, self.ch),
             AsciiChar::LessThan => tok = token::Token::new(token::LT, self.ch),
@@ -131,8 +131,6 @@ impl Lexer {
     }
 }
 
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -160,8 +158,10 @@ mod tests {
 
             10 == 10;
             10 != 9;
-            "###.to_string(),
-        ).unwrap();
+            "###
+            .to_string(),
+        )
+        .unwrap();
 
         #[derive(Debug)]
         struct Expected {
@@ -227,7 +227,7 @@ mod tests {
             Expected::new(token::GT, ">"),
             Expected::new(token::INT, "5"),
             Expected::new(token::SEMICOLON, ";"),
-            Expected::new(token::IF, "if",),
+            Expected::new(token::IF, "if"),
             Expected::new(token::LPAREN, "("),
             Expected::new(token::INT, "5"),
             Expected::new(token::LT, "<"),

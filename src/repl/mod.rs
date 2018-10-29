@@ -1,13 +1,16 @@
-use std::io;
-use std::str::FromStr;
 use ascii::AsciiString;
 use lexer::Lexer;
+use std::io;
+use std::str::FromStr;
 use token;
 
 const PROMPT: &'static str = ">> ";
 
 pub fn start<R, W>(mut reader: R, mut writer: W) -> io::Result<!>
-    where R: io::BufRead, W: io::Write {
+where
+    R: io::BufRead,
+    W: io::Write,
+{
     loop {
         write!(writer, "{}", PROMPT);
         writer.flush()?;

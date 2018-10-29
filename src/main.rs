@@ -2,13 +2,12 @@
 extern crate ascii;
 #[macro_use]
 extern crate lazy_static;
-pub mod token;
+pub mod ast;
 pub mod lexer;
 pub mod repl;
+pub mod token;
 
 use std::io;
-
-
 
 fn main() {
     println!("Hello! This is the Monky programming language!");
