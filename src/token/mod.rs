@@ -1,10 +1,10 @@
-use std::collections::HashMap;
 use ascii::{AsciiChar, AsciiString};
+use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct Token {
     pub token_type: TokenType,
-    pub literal: AsciiString,
+    pub literal: String,
 }
 
 impl Token {
@@ -13,7 +13,7 @@ impl Token {
         literal.push(ch);
         Token {
             token_type,
-            literal,
+            literal: literal.into(),
         }
     }
 
@@ -25,7 +25,7 @@ impl Token {
         };
         Token {
             token_type,
-            literal: ident,
+            literal: ident.into(),
         }
     }
 }
