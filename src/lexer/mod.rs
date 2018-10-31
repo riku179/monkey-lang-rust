@@ -45,7 +45,7 @@ impl Lexer {
                     literal.push(self.ch);
                     tok = token::Token {
                         token_type: token::EQ,
-                        literal,
+                        literal: literal.to_string(),
                     };
                 } else {
                     tok = token::Token::new(token::ASSIGN, self.ch)
@@ -68,7 +68,7 @@ impl Lexer {
                     literal.push(self.ch);
                     tok = token::Token {
                         token_type: token::NOT_EQ,
-                        literal,
+                        literal: literal.to_string(),
                     };
                 } else {
                     tok = token::Token::new(token::BANG, self.ch)
@@ -84,7 +84,7 @@ impl Lexer {
                 } else if self.ch.is_digit() {
                     return token::Token {
                         token_type: token::INT,
-                        literal: self.read_number(),
+                        literal: self.read_number().to_string(),
                     };
                 };
                 tok = token::Token::new(token::EOF, AsciiChar::Null)

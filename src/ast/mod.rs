@@ -1,15 +1,15 @@
 use token;
 
-trait Node {
+pub trait Node {
     fn token_literal(&self) -> String;
 }
 
-trait Statement: Node {}
+pub trait Statement: Node {}
 
-trait Expression: Node {}
+pub trait Expression: Node {}
 
 #[derive(Debug)]
-struct Program<S: Statement> {
+pub struct Program<S: Statement> {
     statements: Vec<S>,
 }
 
@@ -24,7 +24,7 @@ impl<S: Statement> Node for Program<S> {
 }
 
 #[derive(Debug)]
-struct LetStatement {
+pub struct LetStatement {
     token: token::Token,
     name: Identifier,
     // value: Expression,

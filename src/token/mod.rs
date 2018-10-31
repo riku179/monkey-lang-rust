@@ -17,6 +17,14 @@ impl Token {
         }
     }
 
+    pub fn illegal() -> Token {
+        let literal = AsciiString::new();
+        Token {
+            token_type: ILLEGAL,
+            literal: literal.into(),
+        }
+    }
+
     pub fn new_by_literal(ident: AsciiString) -> Token {
         let token_type = if let Some(tok) = KEYWORDS.get(ident.as_str()) {
             tok

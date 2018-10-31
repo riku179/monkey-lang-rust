@@ -2,10 +2,12 @@
 extern crate ascii;
 #[macro_use]
 extern crate lazy_static;
-pub mod ast;
-pub mod lexer;
-pub mod repl;
-pub mod token;
+mod ast;
+mod lexer;
+mod repl;
+mod token;
+mod parser;
+
 
 use std::io;
 

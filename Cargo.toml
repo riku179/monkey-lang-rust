@@ -2,6 +2,7 @@
 name = "monkey_lang"
 version = "0.1.0"
 authors = ["Riku Inoue <riku.inoue@shiroyagi.co.jp>"]
+edition = "2018"
 
 [dependencies]
 ascii = "0.9"
