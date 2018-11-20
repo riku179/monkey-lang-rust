@@ -1,7 +1,7 @@
 use ascii::{AsciiChar, AsciiString};
 use std::collections::HashMap;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Token {
     pub token_type: TokenType,
     pub literal: String,

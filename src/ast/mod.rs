@@ -1,7 +1,7 @@
 use token;
 
 pub trait Node {
-    fn token_literal(&self) -> String;
+    fn token_literal(&self) -> Option<&String>;
 }
 
 pub trait Statement: Node {}
@@ -14,11 +14,11 @@ pub struct Program<S: Statement> {
 }
 
 impl<S: Statement> Node for Program<S> {
-    fn token_literal(&self) -> String {
+    fn token_literal(&self) -> Option<&String> {
         if let Some(s) = self.statements.iter().nth(0) {
             s.token_literal()
         } else {
-            "".to_string()
+            None
         }
     }
 }
@@ -33,8 +33,8 @@ pub struct LetStatement {
 impl Statement for LetStatement {}
 
 impl Node for LetStatement {
-    fn token_literal(&self) -> String {
-        return self.token_literal();
+    fn token_literal(&self) -> Option<&String> {
+        return Some(&self.token.literal);
     }
 }
 
@@ -47,7 +47,7 @@ struct Identifier {
 impl Expression for Identifier {}
 
 impl Node for Identifier {
-    fn token_literal(&self) -> String {
-        return self.token.literal.to_string();
+    fn token_literal(&self) -> Option<&String> {
+        return Some(&self.token.literal)
     }
 }
