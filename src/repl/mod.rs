@@ -1,10 +1,10 @@
+use crate::lexer::Lexer;
+use crate::token;
 use ascii::AsciiString;
-use lexer::Lexer;
 use std::io;
 use std::str::FromStr;
-use token;
 
-const PROMPT: &'static str = ">> ";
+const PROMPT: &str = ">> ";
 
 pub fn start<R, W>(mut reader: R, mut writer: W) -> io::Result<!>
 where
@@ -12,7 +12,7 @@ where
     W: io::Write,
 {
     loop {
-        write!(writer, "{}", PROMPT);
+        write!(writer, "{}", PROMPT).unwrap();
         writer.flush()?;
         let mut line = String::new();
         reader.read_line(&mut line)?;
@@ -23,10 +23,10 @@ where
                 tok = lex.next_token();
                 tok.token_type != token::EOF
             } {
-                writeln!(writer, "{:?}", tok);
+                writeln!(writer, "{:?}", tok).unwrap();
             }
         } else {
-            writeln!(writer, "[ERROR] please input only ASCII string");
+            writeln!(writer, "[ERROR] please input only ASCII string").unwrap();
         }
     }
 }

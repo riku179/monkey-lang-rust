@@ -1,13 +1,9 @@
 #![feature(never_type)]
-extern crate ascii;
-#[macro_use]
-extern crate lazy_static;
 mod ast;
 mod lexer;
+mod parser;
 mod repl;
 mod token;
-mod parser;
-
 
 use std::io;
 

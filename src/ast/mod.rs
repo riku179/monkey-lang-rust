@@ -1,21 +1,42 @@
-use token;
+use crate::token;
 
 pub trait Node {
     fn token_literal(&self) -> Option<&String>;
 }
 
-pub trait Statement: Node {}
+#[derive(Debug)]
+pub enum Statement {
+    Let(LetStatement),
+    Return(ReturnStatement),
+}
+
+impl Node for Statement {
+    fn token_literal(&self) -> Option<&String> {
+        match self {
+            Statement::Let(stmt) => stmt.token_literal(),
+            Statement::Return(stmt) => stmt.token_literal(),
+        }
+    }
+}
 
 pub trait Expression: Node {}
 
 #[derive(Debug)]
-pub struct Program<S: Statement> {
-    statements: Vec<S>,
+pub struct Program {
+    pub statements: Vec<Statement>,
 }
 
-impl<S: Statement> Node for Program<S> {
+impl Program {
+    pub fn new() -> Program {
+        Program {
+            statements: Vec::new(),
+        }
+    }
+}
+
+impl Node for Program {
     fn token_literal(&self) -> Option<&String> {
-        if let Some(s) = self.statements.iter().nth(0) {
+        if let Some(s) = self.statements.get(0) {
             s.token_literal()
         } else {
             None
@@ -25,29 +46,39 @@ impl<S: Statement> Node for Program<S> {
 
 #[derive(Debug)]
 pub struct LetStatement {
-    token: token::Token,
-    name: Identifier,
-    // value: Expression,
+    pub token: token::Token,
+    pub name: Identifier,
+//    pub value: Expression,
 }
-
-impl Statement for LetStatement {}
 
 impl Node for LetStatement {
     fn token_literal(&self) -> Option<&String> {
-        return Some(&self.token.literal);
+        Some(&self.token.literal)
     }
 }
 
 #[derive(Debug)]
-struct Identifier {
-    token: token::Token,
-    value: String,
+pub struct ReturnStatement {
+    pub token: token::Token,
+//    pub return_value: Expression
+}
+
+impl Node for ReturnStatement {
+    fn token_literal(&self) -> Option<&String> {
+        Some(&self.token.literal)
+    }
+}
+
+#[derive(Debug)]
+pub struct Identifier {
+    pub token: token::Token,
+    pub value: String,
 }
 
 impl Expression for Identifier {}
 
 impl Node for Identifier {
     fn token_literal(&self) -> Option<&String> {
-        return Some(&self.token.literal)
+        Some(&self.token.literal)
     }
 }

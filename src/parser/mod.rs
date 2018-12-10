@@ -1,11 +1,14 @@
-// use ast;
-use lexer;
-use token;
-use ast;
+use crate::{ast, ast::Statement};
+use crate::lexer;
+use crate::token;
+
+#[cfg(test)]
+mod test;
 
 #[derive(Debug)]
 struct Parser<'a> {
     lex: &'a mut lexer::Lexer,
+    pub errors: Vec<String>,
 
     cur_token: token::Token,
     peek_token: token::Token,
@@ -15,63 +18,97 @@ impl<'a> Parser<'a> {
     fn new(lex: &'a mut lexer::Lexer) -> Parser<'a> {
         let cur_token = lex.next_token();
         let peek_token = lex.next_token();
-        let parser = Parser {
+        Parser {
             lex,
+            errors: Vec::new(),
             cur_token,
             peek_token,
-        };
-        parser
+        }
     }
 
-    fn next_token(&mut self) -> () {
+    fn next_token(&mut self) {
         self.cur_token = self.peek_token.clone();
         self.peek_token = self.lex.next_token()
     }
 
-    fn parse_program(&self) -> ast::Program {
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use ascii::AsciiString;
-    use super::*;
-    use ast;
-    use lexer;
-
-    #[test]
-    fn test_let_statements() {
-        let input = AsciiString::from_ascii(r###"
-        let x = 5;
-        let y = 10;
-        let foobar = 838383;
-        "###).unwrap();
-
-        let mut lex = lexer::Lexer::new(input);
-        let p = Parser::new(&mut lex);
-
-        let program = p.parse_program();
-        assert_eq!(program.statements.len(), 3, "program.statements does not contain 3 statements.");
-
-        #[derive(Debug)]
-        struct Expected {
-            pub identifier: String
+    fn parse_program(&mut self) -> Option<ast::Program> {
+        let mut program = ast::Program::new();
+        while !self.cur_token_is(token::EOF) {
+            if let Some(statement) = self.parse_statement() {
+                program.statements.push(statement)
+            }
+            self.next_token();
         }
+        Some(program)
+    }
 
-        let expected_results = [
-            Expected{ identifier: "x".to_string() },
-            Expected{ identifier: "y".to_string() },
-            Expected{ identifier: "foobar".to_string() },
-        ];
-
-        for (i, expected) in expected_results.iter().enumerate() {
-            let stmt = program.statements[i];
-            test_let_statement(stmt, expected.identifier);
+    fn parse_statement(&mut self) -> Option<Statement> {
+        match self.cur_token.token_type {
+            token::LET => self.parse_let_statement(),
+            token::RETURN => self.parse_return_statement(),
+            _ => None,
         }
     }
 
-    fn test_let_statement<S: ast::Statement>(s: S, name: String) -> () {
-        let literal = s.token_literal().expect("token literal");
-        assert_eq!(*literal, "let");
+    fn parse_let_statement(&mut self) -> Option<Statement> {
+        if !self.expect_peek(token::IDENT) {
+            return None;
+        }
+
+        let stmt = ast::LetStatement {
+            token: self.cur_token.clone(),
+            name: ast::Identifier {
+                token: self.cur_token.clone(),
+                value: self.cur_token.literal.clone(),
+            },
+        };
+
+        if !self.expect_peek(token::ASSIGN) {
+            return None;
+        }
+
+        while !self.cur_token_is(token::SEMICOLON) {
+            self.next_token()
+        }
+
+        Some(Statement::Let(stmt))
+    }
+    
+    fn parse_return_statement(&mut self) -> Option<Statement> {
+        let stmt = ast::ReturnStatement {
+            token: self.cur_token.clone(),
+        };
+        
+        self.next_token();
+
+        while !self.cur_token_is(token::SEMICOLON) {
+            self.next_token();
+        };
+        
+        Some(Statement::Return(stmt))
+    }
+
+    fn cur_token_is(&self, tok: token::TokenType) -> bool {
+        self.cur_token.token_type == tok
+    }
+
+    fn peek_token_is(&self, tok: token::TokenType) -> bool {
+        self.peek_token.token_type == tok
+    }
+
+    fn expect_peek(&mut self, tok: token::TokenType) -> bool {
+        if self.peek_token_is(tok) {
+            self.next_token();
+            true
+        } else {
+            false
+        }
+    }
+
+    fn peek_error(&mut self, tok: token::TokenType) {
+        self.errors.push(format!(
+            "expected next token to be {}, got {} instead",
+            tok, self.peek_token.token_type
+        ))
     }
 }
