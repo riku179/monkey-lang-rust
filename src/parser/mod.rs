@@ -31,7 +31,7 @@ impl<'a> Parser<'a> {
         self.peek_token = self.lex.next_token()
     }
 
-    fn parse_program(&mut self) -> Option<ast::Program> {
+    fn parse_program(&mut self) -> ast::Program {
         let mut program = ast::Program::new();
         while !self.cur_token_is(token::EOF) {
             if let Some(statement) = self.parse_statement() {
@@ -39,7 +39,7 @@ impl<'a> Parser<'a> {
             }
             self.next_token();
         }
-        Some(program)
+        program
     }
 
     fn parse_statement(&mut self) -> Option<Statement> {
@@ -101,13 +101,14 @@ impl<'a> Parser<'a> {
             self.next_token();
             true
         } else {
+            self.peek_error(tok);
             false
         }
     }
 
     fn peek_error(&mut self, tok: token::TokenType) {
         self.errors.push(format!(
-            "expected next token to be {}, got {} instead",
+            "expected next token to be {:?}, got {:?} instead",
             tok, self.peek_token.token_type
         ))
     }

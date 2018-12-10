@@ -18,7 +18,8 @@ fn test_let_statements() {
     let mut lex = lexer::Lexer::new(input);
     let mut p = Parser::new(&mut lex);
 
-    let program = p.parse_program().expect("program");
+    let program = p.parse_program();
+    check_parser_errors(p);
     assert_eq!(
         program.statements.len(),
         3,
@@ -58,21 +59,44 @@ fn test_let_statement(stmt: &Statement, identifier_name: &String) -> bool {
         return false
     };
     
-    match stmt {
-        Statement::Let(ast::LetStatement{name, ..}) => {
-            if name.value != *identifier_name {
-                eprintln!("LetStatement.name.value not {:?}. got={:?}", identifier_name, name.value);
-                false
-            } else if name.token_literal().unwrap() != identifier_name {
-                eprintln!("LetStatement.name not {:?}. got {:?}", identifier_name, name);
-                false
-            } else {
-                true
-            }
-        }
-        _ => {
-            eprintln!("s not LetStatement. got={:?}", stmt);
+    if let Statement::Let(ast::LetStatement{name, ..}) = stmt {
+        if name.value != *identifier_name {
+            eprintln!("LetStatement.name.value not {:?}. got={:?}", identifier_name, name.value);
             false
+        } else if name.token_literal().unwrap() != identifier_name {
+            eprintln!("LetStatement.name not {:?}. got {:?}", identifier_name, name);
+            false
+        } else {
+            true
+        }
+    } else {
+        eprintln!("s not LetStatement. got={:?}", stmt);
+        false
+    }
+}
+
+#[test]
+fn test_return_statement() {
+    let input = AsciiString::from_ascii(r###"
+    return 5;
+    return 10;
+    return 993322;
+    "###).unwrap();
+    
+    let mut lex = lexer::Lexer::new(input);
+    let mut psr = Parser::new(&mut lex);
+    
+    let program = psr.parse_program();
+    check_parser_errors(psr);
+    assert_eq!(
+        program.statements.len(),
+        3,
+        "program.statements does not contain 3 statements.",
+     );
+    
+    for stmt in program.statements {
+        if let Statement::Return(ast::ReturnStatement{token, ..}) = stmt {
+            assert_eq!(token.literal, "return")
         }
     }
 }

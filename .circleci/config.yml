@@ -1,12 +1,14 @@
-version: 2.1
-
-orbs:
-    rust: glotrade/rust@0.1.1
-
-jobs: 
+version: 2
+jobs:
     test:
+        docker:
+            - image: circleci/rust:latest
         steps:
             - checkout
-            - rust/test:
-                  toolchain: "nightly"
-                  release: false
+            - run: cargo test
+
+workflows:
+    version: 2
+    test:
+        jobs:
+            - test
