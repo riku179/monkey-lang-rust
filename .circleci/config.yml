@@ -6,5 +6,4 @@ jobs:
         steps:
             - run: 
                   name: Running test
-                  command: |
-                      cargo test
+                  command: cargo test
