@@ -44,7 +44,9 @@ fn test_let_statements() {
 
     for (i, expected) in expected_results.iter().enumerate() {
         let stmt = &program.statements[i];
-        assert!(test_let_statement(stmt, &expected.identifier))
+        if !test_let_statement(stmt, &expected.identifier) {
+            return
+        }
     }
 }
 
