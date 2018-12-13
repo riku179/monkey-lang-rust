@@ -8,6 +8,7 @@ pub trait Node {
 pub enum Statement {
     Let(LetStatement),
     Return(ReturnStatement),
+    Expression(ExpressionStatement),
 }
 
 impl Node for Statement {
@@ -15,11 +16,23 @@ impl Node for Statement {
         match self {
             Statement::Let(stmt) => stmt.token_literal(),
             Statement::Return(stmt) => stmt.token_literal(),
+            Statement::Expression(stmt) => stmt.token_literal(),
         }
     }
 }
 
-pub trait Expression: Node {}
+#[derive(Debug)]
+pub enum Expression {
+    Identifier(Identifier)
+}
+
+impl Node for Expression {
+    fn token_literal(&self) -> Option<&String> {
+        match self {
+            Expression::Identifier(exp) => exp.token_literal(),
+        }
+    }
+}
 
 #[derive(Debug)]
 pub struct Program {
@@ -70,12 +83,22 @@ impl Node for ReturnStatement {
 }
 
 #[derive(Debug)]
+pub struct ExpressionStatement {
+    pub token: token::Token,
+    pub expression: Expression,
+}
+
+impl Node for ExpressionStatement {
+    fn token_literal(&self) -> Option<&String> {
+        Some(&self.token.literal)
+    }
+}
+
+#[derive(Debug)]
 pub struct Identifier {
     pub token: token::Token,
     pub value: String,
 }
-
-impl Expression for Identifier {}
 
 impl Node for Identifier {
     fn token_literal(&self) -> Option<&String> {
