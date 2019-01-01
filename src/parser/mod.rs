@@ -1,9 +1,26 @@
-use crate::{ast, ast::Statement};
+use crate::ast::{
+    Program,
+    Expr,
+    Ident,
+    Literal,
+    Stmt,
+};
 use crate::lexer;
 use crate::token;
 
 #[cfg(test)]
 mod test;
+
+#[derive(PartialOrd, PartialEq)]
+enum Priority {
+    LOWEST,
+    EQUALS,
+    LESSGREATER,
+    SUM,
+    PRODUCT,
+    PREFIX,
+    CALL
+}
 
 #[derive(Debug)]
 struct Parser<'a> {
@@ -18,6 +35,7 @@ impl<'a> Parser<'a> {
     fn new(lex: &'a mut lexer::Lexer) -> Parser<'a> {
         let cur_token = lex.next_token();
         let peek_token = lex.next_token();
+
         Parser {
             lex,
             errors: Vec::new(),
@@ -26,13 +44,10 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn next_token(&mut self) {
-        self.cur_token = self.peek_token.clone();
-        self.peek_token = self.lex.next_token()
-    }
+    /// entry point
+    fn parse_program(&mut self) -> Program {
+        let mut program = Program::new();
 
-    fn parse_program(&mut self) -> ast::Program {
-        let mut program = ast::Program::new();
         while !self.cur_token_is(token::EOF) {
             if let Some(statement) = self.parse_statement() {
                 program.statements.push(statement)
@@ -42,26 +57,25 @@ impl<'a> Parser<'a> {
         program
     }
 
-    fn parse_statement(&mut self) -> Option<Statement> {
+    fn next_token(&mut self) {
+        self.cur_token = self.peek_token.clone();
+        self.peek_token = self.lex.next_token()
+    }
+
+    fn parse_statement(&mut self) -> Option<Stmt> {
         match self.cur_token.token_type {
             token::LET => self.parse_let_statement(),
             token::RETURN => self.parse_return_statement(),
-            _ => None,
+            _ => self.parse_expression_statement(),
         }
     }
 
-    fn parse_let_statement(&mut self) -> Option<Statement> {
+    fn parse_let_statement(&mut self) -> Option<Stmt> {
         if !self.expect_peek(token::IDENT) {
             return None;
         }
 
-        let stmt = ast::LetStatement {
-            token: self.cur_token.clone(),
-            name: ast::Identifier {
-                token: self.cur_token.clone(),
-                value: self.cur_token.literal.clone(),
-            },
-        };
+        let stmt = Stmt::Let(Ident(self.cur_token.literal.clone()));
 
         if !self.expect_peek(token::ASSIGN) {
             return None;
@@ -71,13 +85,11 @@ impl<'a> Parser<'a> {
             self.next_token()
         }
 
-        Some(Statement::Let(stmt))
+        Some(stmt)
     }
     
-    fn parse_return_statement(&mut self) -> Option<Statement> {
-        let stmt = ast::ReturnStatement {
-            token: self.cur_token.clone(),
-        };
+    fn parse_return_statement(&mut self) -> Option<Stmt> {
+        let stmt = Stmt::Return;
         
         self.next_token();
 
@@ -85,7 +97,43 @@ impl<'a> Parser<'a> {
             self.next_token();
         };
         
-        Some(Statement::Return(stmt))
+        Some(stmt)
+    }
+    
+    fn parse_expression_statement(&mut self) -> Option<Stmt> {
+        if let Some(expr) = self.parse_expression(Priority::LOWEST) {
+            let stmt = Stmt::Expr(expr);
+        
+            if self.peek_token_is(token::SEMICOLON) {
+                self.next_token()
+            };
+            
+            Some(stmt)
+        } else {
+            return None
+        }
+    }
+    
+    fn parse_expression(&mut self, priority: Priority) -> Option<Expr> {
+        match self.cur_token.token_type {
+            token::IDENT => Some(self.parse_identifier()),
+            token::INT => self.parse_integer_literal(),
+            _ => None,
+        }
+    }
+
+    fn parse_identifier(&self) -> Expr {
+        Expr::Ident(Ident(self.cur_token.literal.clone()))
+    }
+
+    fn parse_integer_literal(&mut self) -> Option<Expr> {
+        match self.cur_token.literal.parse::<i64>() {
+            Ok(val) => Some(Expr::Literal(Literal::Int(val))),
+            Err(_) => {
+                self.errors.push(format!("could not parse {:?} as interger", self.cur_token.literal));
+                None
+            },
+        }
     }
 
     fn cur_token_is(&self, tok: token::TokenType) -> bool {

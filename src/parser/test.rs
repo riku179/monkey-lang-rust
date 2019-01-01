@@ -1,8 +1,23 @@
 use super::*;
-use crate::{ast, ast::Statement};
+use crate::ast::{Stmt, Expr, Ident, Literal};
 use crate::lexer;
 use ascii::AsciiString;
-use crate::ast::Node;
+
+fn check_parser_errors(p: Parser) {
+    let errors = p.errors;
+
+    if errors.len() == 0 {
+        return
+    }
+
+    eprintln!("parser has {} errors", errors.len());
+
+    for msg in errors {
+        eprintln!("parser error: \"{}\"", msg)
+    };
+
+    panic!("failed to parse!");
+}
 
 #[test]
 fn test_let_statements() {
@@ -51,24 +66,9 @@ fn test_let_statements() {
     }
 }
 
-fn test_let_statement(stmt: &Statement, identifier_name: &String) -> bool {
-    let literal = stmt.token_literal().expect("token literal");
-
-    if literal != token::LET {
-        eprintln!("token literal is not 'let'. got={:?}", literal);
-        return false
-    };
-    
-    if let Statement::Let(ast::LetStatement{name, ..}) = stmt {
-        if name.value != *identifier_name {
-            eprintln!("LetStatement.name.value not {:?}. got={:?}", identifier_name, name.value);
-            false
-        } else if name.token_literal().unwrap() != identifier_name {
-            eprintln!("LetStatement.name not {:?}. got {:?}", identifier_name, name);
-            false
-        } else {
-            true
-        }
+fn test_let_statement(stmt: &Stmt, identifier_name: &String) -> bool {
+    if let Stmt::Let(Ident(name)) = stmt {
+        name == identifier_name
     } else {
         eprintln!("s not LetStatement. got={:?}", stmt);
         false
@@ -95,24 +95,38 @@ fn test_return_statement() {
      );
     
     for stmt in program.statements {
-        if let Statement::Return(ast::ReturnStatement{token, ..}) = stmt {
-            assert_eq!(token.literal, "return")
-        }
+        assert_eq!(stmt, Stmt::Return);
     }
 }
 
-fn check_parser_errors(p: Parser) {
-    let errors = p.errors;
+#[test]
+fn test_identifier_expression() {
+    let input = AsciiString::from_ascii(r#"foobar;"#,).unwrap();
 
-    if errors.len() == 0 {
-        return
-    }
+    let mut lex = lexer::Lexer::new(input);
+    let mut p = Parser::new(&mut lex);
 
-    eprintln!("parser has {} errors", errors.len());
-
-    for msg in errors {
-        eprintln!("parser error: \"{}\"", msg)
+    let program = p.parse_program();
+    check_parser_errors(p);   
+    assert_eq!(program.statements.len(), 1, "program.statements does not contain 1 statements.");
+    
+    if let Stmt::Expr(Expr::Ident(Ident(value))) = &program.statements[0] {
+        assert_eq!(value, "foobar");
     };
+}
 
-    panic!("failed to parse!");
+#[test]
+fn test_integer_literal_expression() {
+    let input = AsciiString::from_ascii(r#"5;"#).unwrap();
+
+    let mut lex = lexer::Lexer::new(input);
+    let mut p = Parser::new(&mut lex);
+
+    let program = p.parse_program();
+    check_parser_errors(p);
+    assert_eq!(program.statements.len(), 1, "program.statements does not contain 1 statements.");
+
+    if let Stmt::Expr(Expr::Literal(Literal::Int(val))) = &program.statements[0] {
+        assert_eq!(*val, 5);
+    }
 }
