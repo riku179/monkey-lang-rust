@@ -24,9 +24,9 @@ fn test_next_token() {
             10 == 10;
             10 != 9;
             "###
-            .to_string(),
+        .to_string(),
     )
-        .unwrap();
+    .unwrap();
 
     #[derive(Debug)]
     struct Expected {

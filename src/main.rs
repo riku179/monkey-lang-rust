@@ -1,4 +1,5 @@
 #![feature(never_type)]
+#![feature(box_patterns)]
 mod ast;
 mod lexer;
 mod parser;
