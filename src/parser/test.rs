@@ -1,5 +1,5 @@
 use super::*;
-use crate::ast::{Expr, Ident, Literal, Prefix, Stmt};
+use crate::ast::{Expr, Ident, Literal, Prefix, Infix, Stmt};
 use crate::lexer;
 use ascii::AsciiString;
 
@@ -38,7 +38,8 @@ fn test_let_stmts() {
     assert_eq!(
         program.statements.len(),
         3,
-        "program.statements does not contain 3 statements."
+        "program.statements does not contain 3 statements. got {:?}",
+        program.statements
     );
 
     #[derive(Debug)]
@@ -90,7 +91,8 @@ fn test_return_stmt() {
     assert_eq!(
         program.statements.len(),
         3,
-        "program.statements does not contain 3 statements.",
+        "program.statements does not contain 3 statements. got {:?}",
+        program.statements
     );
 
     for stmt in program.statements {
@@ -110,7 +112,8 @@ fn test_ident_expr() {
     assert_eq!(
         program.statements.len(),
         1,
-        "program.statements does not contain 1 statements."
+        "program.statements does not contain 1 statements. {:?}",
+        program.statements
     );
 
     if let Stmt::Expr(Expr::Ident(Ident(value))) = &program.statements[0] {
@@ -130,7 +133,8 @@ fn test_integer_literal_expr() {
     assert_eq!(
         program.statements.len(),
         1,
-        "program.statements does not contain 1 statements."
+        "program.statements does not contain 1 statements. {:?}",
+        program.statements
     );
 
     if let Stmt::Expr(Expr::Literal(Literal::Int(val))) = &program.statements[0] {
@@ -171,7 +175,8 @@ fn test_parse_prefix_expr() {
         assert_eq!(
             program.statements.len(),
             1,
-            "program.statements does not contain 1 statements."
+            "program.statements does not contain 1 statements. got {:?}",
+            program.statements
         );
 
         if let Stmt::Expr(Expr::Prefix(prefix, box Expr::Literal(Literal::Int(val)))) =
@@ -182,5 +187,55 @@ fn test_parse_prefix_expr() {
         } else {
             panic!(format!("Type error. got {:?}", &program.statements[0]));
         };
+    }
+}
+
+#[test]
+fn test_parse_infix_expr() {
+    #[derive(Debug)]
+    struct InfixTest {
+        pub input: &'static str,
+        pub left: i64,
+        pub infix: Infix,
+        pub right: i64,
+    }
+
+    impl InfixTest {
+        fn new(input: &'static str, left: i64, infix: Infix, right: i64) -> Self {
+            InfixTest {input, left, infix, right}
+        }
+    }
+
+    let infix_tests = vec![
+        InfixTest::new("5 + 5;", 5, Infix::Plus, 5),
+        InfixTest::new("5 - 5", 5, Infix::Minus, 5),
+        InfixTest::new("5 * 5", 5, Infix::Multiply, 5),
+        InfixTest::new("5 / 5", 5, Infix::Divide, 5),
+        InfixTest::new("5 > 5", 5, Infix::GreaterThan, 5),
+        InfixTest::new("5 < 5", 5, Infix::LessThan, 5),
+        InfixTest::new("5 == 5", 5, Infix::Equal, 5),
+        InfixTest::new("5 != 5", 5, Infix::NotEqual, 5),
+    ];
+
+    for test in infix_tests {
+        let mut l = lexer::Lexer::new(AsciiString::from_ascii(test.input).unwrap());
+        let mut p = Parser::new(&mut l);
+        let program = p.parse_program();
+        check_parser_errors(p);
+
+        assert_eq!(
+            program.statements.len(),
+            1,
+            "program.statements does not contain 1 statements. got {:?}",
+            program.statements
+        );
+
+        if let Stmt::Expr(Expr::Infix(box Expr::Literal(Literal::Int(left)), infix, box Expr::Literal(Literal::Int(right)))) = &program.statements[0] {
+            assert_eq!(*left, test.left);
+            assert_eq!(*infix, test.infix);
+            assert_eq!(*right, test.right);
+        } else {
+            panic!(format!("Type error. got {:?}", &program.statements[0]));
+        }
     }
 }

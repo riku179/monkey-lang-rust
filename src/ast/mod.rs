@@ -31,6 +31,7 @@ pub enum Expr {
     Ident(Ident),
     Literal(Literal),
     Prefix(Prefix, Box<Expr>),
+    Infix(Box<Expr>, Infix, Box<Expr>),
 }
 
 #[derive(PartialEq, Clone, Debug)]
@@ -62,6 +63,49 @@ impl fmt::Display for Prefix {
             Prefix::Plus => write!(f, "+"),
             Prefix::Minus => write!(f, "-"),
             Prefix::Not => write!(f, "!"),
+        }
+    }
+}
+
+#[derive(PartialEq, Debug)]
+pub enum Infix {
+    Plus,
+    Minus,
+    Divide,
+    Multiply,
+    Equal,
+    NotEqual,
+    GreaterThan,
+    LessThan,
+}
+
+impl Infix {
+    pub fn from_token(tok: &token::Token) -> Result<Self, String> {
+        match tok.token_type {
+            token::PLUS => Ok(Infix::Plus),
+            token::MINUS => Ok(Infix::Minus),
+            token::SLASH => Ok(Infix::Divide),
+            token::ASTERISK => Ok(Infix::Multiply),
+            token::EQ => Ok(Infix::Equal),
+            token::NOT_EQ => Ok(Infix::NotEqual),
+            token::GT => Ok(Infix::GreaterThan),
+            token::LT => Ok(Infix::LessThan),
+            _ => Err(format!("this is not prefix token. got {:?}", tok.token_type))
+        }
+    }
+}
+
+impl fmt::Display for Infix {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Infix::Plus => write!(f, "+"),
+            Infix::Minus => write!(f, "-"),
+            Infix::Divide => write!(f, "/"),
+            Infix::Multiply => write!(f, "*"),
+            Infix::Equal => write!(f, "="),
+            Infix::NotEqual => write!(f, "!"),
+            Infix::GreaterThan => write!(f, ">"),
+            Infix::LessThan => write!(f, "<"),
         }
     }
 }

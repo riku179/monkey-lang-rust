@@ -1,4 +1,4 @@
-use crate::ast::{Expr, Ident, Literal, Program, Stmt, Prefix};
+use crate::ast::{Expr, Ident, Literal, Program, Stmt, Prefix, Infix};
 use crate::lexer;
 use crate::token;
 
@@ -109,16 +109,42 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_expression(&mut self, priority: Priority) -> Option<Expr> {
-        match self.cur_token.token_type {
-            token::IDENT => Some(self.parse_identifier()),
-            token::INT => self.parse_integer_literal(),
-            token::PLUS => self.parse_prefix_expr(),
-            token::MINUS => self.parse_prefix_expr(),
-            token::BANG => self.parse_prefix_expr(),
-            _ => {
-                self.errors.push(format!("unknown token in expression. got {:?}", self.cur_token.token_type));
-                None
-            },
+
+        let mut left_opt = match self.cur_token.token_type {
+                token::IDENT => Some(self.parse_identifier()),
+                token::INT => self.parse_integer_literal(),
+                token::PLUS => self.parse_prefix_expr(),
+                token::MINUS => self.parse_prefix_expr(),
+                token::BANG => self.parse_prefix_expr(),
+                _ => {
+                    self.errors.push(format!("unknown token in expression. got {:?}", self.cur_token.token_type));
+                    None
+                }
+            };
+        
+
+        if let Some(mut left) = left_opt {
+            // not end of a statement and next token has more priority than current token
+            while !self.peek_token_is(token::SEMICOLON) && priority < self.peek_priority() {
+                left_opt = match self.peek_token.token_type {
+                    | token::PLUS
+                    | token::MINUS
+                    | token::SLASH
+                    | token::ASTERISK
+                    | token::EQ
+                    | token::NOT_EQ
+                    | token::LT
+                    | token::GT => {
+                        self.next_token();
+                        self.parse_infix_expr(left)
+                    }
+                    _ => return Some(left)
+                };
+                left = left_opt.expect("left expression")
+            }
+            Some(left)
+        } else {
+            None
         }
     }
 
@@ -140,7 +166,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_prefix_expr(&mut self) -> Option<Expr> {
-        let cur_token = self.cur_token.clone();
+        let cur_token = self.cur_token.clone();// PLUS
 
         self.next_token();
 
@@ -151,6 +177,24 @@ impl<'a> Parser<'a> {
                     self.errors.push(err);
                     None
                 }
+            }
+        } else {
+            None
+        }
+    }
+
+    fn parse_infix_expr(&mut self, left: Expr) -> Option<Expr> {
+        let cur_token = self.cur_token.clone();// PLUS
+        let priority = self.cur_priority(); // SUM
+        self.next_token();
+
+        if let Some(right) = self.parse_expression(priority) {
+            match Infix::from_token(&cur_token) {
+                Ok(infix) => Some(Expr::Infix(Box::new(left), infix, Box::new(right))),
+                Err(err) => {
+                    self.errors.push(err);
+                    None
+                },
             }
         } else {
             None
@@ -180,5 +224,27 @@ impl<'a> Parser<'a> {
             "expected next token to be {:?}, got {:?} instead",
             tok, self.peek_token.token_type
         ))
+    }
+
+    fn get_priority(tok: &token::Token) -> Priority {
+        match tok.token_type {
+            token::EQ => Priority::EQUALS,
+            token::NOT_EQ => Priority::EQUALS,
+            token::LT => Priority::LESSGREATER,
+            token::GT => Priority::LESSGREATER,
+            token::PLUS => Priority::SUM,
+            token::MINUS => Priority::SUM,
+            token::SLASH => Priority::PRODUCT,
+            token::ASTERISK => Priority::PRODUCT,
+            _ => Priority::LOWEST,
+        }
+    }
+
+    fn peek_priority(&self) -> Priority {
+        Parser::get_priority(&self.peek_token)
+    }
+
+    fn cur_priority(&self) -> Priority {
+        Parser::get_priority(&self.cur_token)
     }
 }
