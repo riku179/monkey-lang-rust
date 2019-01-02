@@ -42,22 +42,11 @@ fn test_let_stmts() {
         program.statements
     );
 
-    #[derive(Debug)]
-    struct Expected {
-        pub identifier: &'static str,
-    }
-
-    let expected_results = [
-        Expected { identifier: "x" },
-        Expected { identifier: "y" },
-        Expected {
-            identifier: "foobar",
-        },
-    ];
+    let expected_results = vec!["x", "y", "foobar"];
 
     for (i, expected) in expected_results.iter().enumerate() {
         let stmt = &program.statements[i];
-        if !test_let_stmt(stmt, &expected.identifier.to_string()) {
+        if !test_let_stmt(stmt, &expected.to_string()) {
             return;
         }
     }
@@ -146,28 +135,13 @@ fn test_integer_literal_expr() {
 
 #[test]
 fn test_parse_prefix_expr() {
-    #[derive(Debug)]
-    struct PrefixTest {
-        pub input: &'static str,
-        pub prefix: Prefix,
-        pub value: i64,
-    }
-
     let prefix_tests = vec![
-        PrefixTest {
-            input: "!5;",
-            prefix: Prefix::Not,
-            value: 5,
-        },
-        PrefixTest {
-            input: "-15;",
-            prefix: Prefix::Minus,
-            value: 15,
-        },
+            ("!5;", Prefix::Not, 5),
+            ( "-15;", Prefix::Minus, 15),
     ];
 
-    for test in prefix_tests {
-        let mut l = lexer::Lexer::new(AsciiString::from_ascii(test.input).unwrap());
+    for (input, expect_prefix, expect_val) in prefix_tests {
+        let mut l = lexer::Lexer::new(AsciiString::from_ascii(input).unwrap());
         let mut p = Parser::new(&mut l);
         let program = p.parse_program();
         check_parser_errors(p);
@@ -182,8 +156,8 @@ fn test_parse_prefix_expr() {
         if let Stmt::Expr(Expr::Prefix(prefix, box Expr::Literal(Literal::Int(val)))) =
             &program.statements[0]
         {
-            assert_eq!(*prefix, test.prefix);
-            assert_eq!(*val, test.value);
+            assert_eq!(*prefix, expect_prefix);
+            assert_eq!(*val, expect_val);
         } else {
             panic!(format!("Type error. got {:?}", &program.statements[0]));
         };
@@ -192,33 +166,19 @@ fn test_parse_prefix_expr() {
 
 #[test]
 fn test_parse_infix_expr() {
-    #[derive(Debug)]
-    struct InfixTest {
-        pub input: &'static str,
-        pub left: i64,
-        pub infix: Infix,
-        pub right: i64,
-    }
-
-    impl InfixTest {
-        fn new(input: &'static str, left: i64, infix: Infix, right: i64) -> Self {
-            InfixTest {input, left, infix, right}
-        }
-    }
-
     let infix_tests = vec![
-        InfixTest::new("5 + 5;", 5, Infix::Plus, 5),
-        InfixTest::new("5 - 5", 5, Infix::Minus, 5),
-        InfixTest::new("5 * 5", 5, Infix::Multiply, 5),
-        InfixTest::new("5 / 5", 5, Infix::Divide, 5),
-        InfixTest::new("5 > 5", 5, Infix::GreaterThan, 5),
-        InfixTest::new("5 < 5", 5, Infix::LessThan, 5),
-        InfixTest::new("5 == 5", 5, Infix::Equal, 5),
-        InfixTest::new("5 != 5", 5, Infix::NotEqual, 5),
+        ( "5 + 5;", 5, Infix::Plus, 5),
+        ( "5 - 5", 5, Infix::Minus, 5),
+        ( "5 * 5", 5, Infix::Multiply, 5),
+        ( "5 / 5", 5, Infix::Divide, 5),
+        ( "5 > 5", 5, Infix::GreaterThan, 5),
+        ( "5 < 5", 5, Infix::LessThan, 5),
+        ( "5 == 5", 5, Infix::Equal, 5),
+        ( "5 != 5", 5, Infix::NotEqual, 5),
     ];
 
-    for test in infix_tests {
-        let mut l = lexer::Lexer::new(AsciiString::from_ascii(test.input).unwrap());
+    for (input, expect_left, expect_infix, expect_right) in infix_tests {
+        let mut l = lexer::Lexer::new(AsciiString::from_ascii(input).unwrap());
         let mut p = Parser::new(&mut l);
         let program = p.parse_program();
         check_parser_errors(p);
@@ -231,9 +191,9 @@ fn test_parse_infix_expr() {
         );
 
         if let Stmt::Expr(Expr::Infix(box Expr::Literal(Literal::Int(left)), infix, box Expr::Literal(Literal::Int(right)))) = &program.statements[0] {
-            assert_eq!(*left, test.left);
-            assert_eq!(*infix, test.infix);
-            assert_eq!(*right, test.right);
+            assert_eq!(*left, expect_left);
+            assert_eq!(*infix, expect_infix);
+            assert_eq!(*right, expect_right);
         } else {
             panic!(format!("Type error. got {:?}", &program.statements[0]));
         }
