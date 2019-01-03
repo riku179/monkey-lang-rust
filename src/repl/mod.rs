@@ -1,5 +1,5 @@
 use crate::lexer::Lexer;
-use crate::token;
+use crate::token::Token;
 use ascii::AsciiString;
 use std::io;
 use std::str::FromStr;
@@ -21,7 +21,7 @@ where
             let mut tok;
             while {
                 tok = lex.next_token();
-                tok.token_type != token::EOF
+                tok != Token::EOF
             } {
                 writeln!(writer, "{:?}", tok).unwrap();
             }

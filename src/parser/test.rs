@@ -46,18 +46,11 @@ fn test_let_stmts() {
 
     for (i, expected) in expected_results.iter().enumerate() {
         let stmt = &program.statements[i];
-        if !test_let_stmt(stmt, &expected.to_string()) {
-            return;
+        if let Stmt::Let(Ident(name)) = stmt {
+            assert_eq!(name, expected);
+        } else {
+            panic!(format!("Type error. got {:?}", &program.statements[i]));
         }
-    }
-}
-
-fn test_let_stmt(stmt: &Stmt, identifier_name: &String) -> bool {
-    if let Stmt::Let(Ident(name)) = stmt {
-        name == identifier_name
-    } else {
-        eprintln!("s not LetStatement. got={:?}", stmt);
-        false
     }
 }
 

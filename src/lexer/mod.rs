@@ -1,4 +1,4 @@
-use crate::token;
+use crate::token::Token;
 use ascii::{AsciiChar, AsciiString};
 
 #[cfg(test)]
@@ -34,10 +34,10 @@ impl Lexer {
         self.read_position += 1
     }
 
-    pub fn next_token(&mut self) -> token::Token {
+    pub fn next_token(&mut self) -> Token {
         self.skip_whitespace();
 
-        let tok;
+        let tok: Token;
         match self.ch {
             AsciiChar::Equal => {
                 if self.peek_char() == AsciiChar::Equal {
@@ -46,22 +46,19 @@ impl Lexer {
                     let mut literal = AsciiString::new();
                     literal.push(current_ch);
                     literal.push(self.ch);
-                    tok = token::Token {
-                        token_type: token::EQ,
-                        literal: literal.to_string(),
-                    };
+                    tok = Token::EQ
                 } else {
-                    tok = token::Token::new(token::ASSIGN, self.ch)
+                    tok = Token::ASSIGN
                 }
             }
-            AsciiChar::Semicolon => tok = token::Token::new(token::SEMICOLON, self.ch),
-            AsciiChar::ParenOpen => tok = token::Token::new(token::LPAREN, self.ch),
-            AsciiChar::ParenClose => tok = token::Token::new(token::RPAREN, self.ch),
-            AsciiChar::Comma => tok = token::Token::new(token::COMMA, self.ch),
-            AsciiChar::CurlyBraceOpen => tok = token::Token::new(token::LBRACE, self.ch),
-            AsciiChar::CurlyBraceClose => tok = token::Token::new(token::RBRACE, self.ch),
-            AsciiChar::Plus => tok = token::Token::new(token::PLUS, self.ch),
-            AsciiChar::Minus => tok = token::Token::new(token::MINUS, self.ch),
+            AsciiChar::Semicolon => tok = Token::SEMICOLON,
+            AsciiChar::ParenOpen => tok = Token::LPAREN,
+            AsciiChar::ParenClose => tok = Token::RPAREN,
+            AsciiChar::Comma => tok = Token::COMMA,
+            AsciiChar::CurlyBraceOpen => tok = Token::LBRACE,
+            AsciiChar::CurlyBraceClose => tok = Token::RBRACE,
+            AsciiChar::Plus => tok = Token::PLUS,
+            AsciiChar::Minus => tok = Token::MINUS,
             AsciiChar::Exclamation => {
                 if self.peek_char() == AsciiChar::Equal {
                     let current_ch = self.ch;
@@ -69,50 +66,54 @@ impl Lexer {
                     let mut literal = AsciiString::new();
                     literal.push(current_ch);
                     literal.push(self.ch);
-                    tok = token::Token {
-                        token_type: token::NOT_EQ,
-                        literal: literal.to_string(),
-                    };
+                    tok = Token::NOTEQ;
                 } else {
-                    tok = token::Token::new(token::BANG, self.ch)
+                    tok = Token::BANG;
                 }
             }
-            AsciiChar::Slash => tok = token::Token::new(token::SLASH, self.ch),
-            AsciiChar::Asterisk => tok = token::Token::new(token::ASTERISK, self.ch),
-            AsciiChar::LessThan => tok = token::Token::new(token::LT, self.ch),
-            AsciiChar::GreaterThan => tok = token::Token::new(token::GT, self.ch),
+            AsciiChar::Slash => tok = Token::SLASH,
+            AsciiChar::Asterisk => tok = Token::ASTERISK,
+            AsciiChar::LessThan => tok = Token::LT,
+            AsciiChar::GreaterThan => tok = Token::GT,
             _ => {
                 if self.is_letter() {
-                    return token::Token::new_by_literal(self.read_identifier());
+                    let ident = self.read_identifier();
+                    return match ident.as_str() {
+                        "fn" => Token::FUNCTION,
+                        "let" => Token::LET,
+                        "true" => Token::TRUE,
+                        "false" => Token::FALSE,
+                        "if" => Token::IF,
+                        "else" => Token::ELSE,
+                        "return" => Token::RETURN,
+                        _ => Token::IDENT(ident)
+                    }
                 } else if self.ch.is_digit() {
-                    return token::Token {
-                        token_type: token::INT,
-                        literal: self.read_number().to_string(),
-                    };
+                    return Token::INT(self.read_number());
                 };
-                tok = token::Token::new(token::EOF, AsciiChar::Null)
+                tok = Token::EOF
             }
         };
         self.read_char();
         tok
     }
 
-    fn read_identifier(&mut self) -> AsciiString {
+    fn read_identifier(&mut self) -> String {
         let mut literal = AsciiString::new();
         while self.is_letter() {
             literal.push(self.ch);
             self.read_char();
         }
-        literal
+        literal.to_string()
     }
 
-    fn read_number(&mut self) -> AsciiString {
+    fn read_number(&mut self) -> i64 {
         let mut literal = AsciiString::new();
         while self.ch.is_digit() {
             literal.push(self.ch);
             self.read_char();
         }
-        literal
+        literal.to_string().parse().expect("failed to parse number")
     }
 
     fn skip_whitespace(&mut self) {

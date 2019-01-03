@@ -1,5 +1,5 @@
 use std::fmt;
-use crate::token;
+use crate::token::Token;
 
 #[derive(Debug)]
 pub struct Program {
@@ -47,12 +47,12 @@ pub enum Prefix {
 }
 
 impl Prefix {
-    pub fn from_token(tok: &token::Token) -> Result<Self, String> {
-        match tok.token_type {
-            token::PLUS => Ok(Prefix::Plus),
-            token::MINUS => Ok(Prefix::Minus),
-            token::BANG => Ok(Prefix::Not),
-            _ => Err(format!("this is not prefix token. got {:?}", tok.token_type))
+    pub fn from_token(tok: &Token) -> Result<Self, String> {
+        match tok {
+            Token::PLUS => Ok(Prefix::Plus),
+            Token::MINUS => Ok(Prefix::Minus),
+            Token::BANG => Ok(Prefix::Not),
+            _ => Err(format!("this is not prefix token. got {:?}", tok))
         }
     }
 }
@@ -80,17 +80,17 @@ pub enum Infix {
 }
 
 impl Infix {
-    pub fn from_token(tok: &token::Token) -> Result<Self, String> {
-        match tok.token_type {
-            token::PLUS => Ok(Infix::Plus),
-            token::MINUS => Ok(Infix::Minus),
-            token::SLASH => Ok(Infix::Divide),
-            token::ASTERISK => Ok(Infix::Multiply),
-            token::EQ => Ok(Infix::Equal),
-            token::NOT_EQ => Ok(Infix::NotEqual),
-            token::GT => Ok(Infix::GreaterThan),
-            token::LT => Ok(Infix::LessThan),
-            _ => Err(format!("this is not prefix token. got {:?}", tok.token_type))
+    pub fn from_token(tok: &Token) -> Result<Self, String> {
+        match tok {
+            Token::PLUS => Ok(Infix::Plus),
+            Token::MINUS => Ok(Infix::Minus),
+            Token::SLASH => Ok(Infix::Divide),
+            Token::ASTERISK => Ok(Infix::Multiply),
+            Token::EQ => Ok(Infix::Equal),
+            Token::NOTEQ => Ok(Infix::NotEqual),
+            Token::GT => Ok(Infix::GreaterThan),
+            Token::LT => Ok(Infix::LessThan),
+            _ => Err(format!("this is not prefix token. got {:?}", tok))
         }
     }
 }
