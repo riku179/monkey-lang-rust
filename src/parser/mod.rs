@@ -112,6 +112,7 @@ impl<'a> Parser<'a> {
 
     fn parse_expression(&mut self, priority: Priority) -> Option<Expr> {
 
+        // prefix
         let mut left_opt = match self.cur_token {
                 Token::IDENT(_) => self.parse_identifier(),
                 Token::INT(_) => self.parse_integer_literal(),
@@ -120,13 +121,14 @@ impl<'a> Parser<'a> {
                 Token::PLUS => self.parse_prefix_expr(),
                 Token::MINUS => self.parse_prefix_expr(),
                 Token::BANG => self.parse_prefix_expr(),
+                Token::LPAREN => self.parse_grouped_expr(),
                 _ => {
                     self.errors.push(format!("unknown token in expression. got {:?}", self.cur_token));
                     None
                 }
             };
         
-
+        // infix
         if let Some(mut left) = left_opt {
             // not end of a statement and next token has more priority than current token
             while !self.peek_token_is(&Token::SEMICOLON) && priority < self.peek_priority() {
@@ -144,7 +146,7 @@ impl<'a> Parser<'a> {
                     }
                     _ => return Some(left)
                 };
-                left = left_opt.expect("left expression")
+                left = left_opt.expect("expression function not found.")
             }
             Some(left)
         } else {
@@ -209,6 +211,18 @@ impl<'a> Parser<'a> {
             }
         } else {
             None
+        }
+    }
+
+    fn parse_grouped_expr(&mut self) -> Option<Expr> {
+        self.next_token();
+
+        let expr = self.parse_expression(Priority::LOWEST);
+
+        if !self.expect_peek(&Token::RPAREN) {
+            None
+        } else {
+            expr
         }
     }
 
