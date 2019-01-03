@@ -127,6 +127,31 @@ fn test_integer_literal_expr() {
 }
 
 #[test]
+fn test_boolean_literal_expr() {
+    let test_cases = vec![
+        ("true;", true),
+        ("false;", false)
+    ];
+
+    for (input, expect) in test_cases {
+        let mut lex = lexer::Lexer::new(AsciiString::from_ascii(input).unwrap());
+        let mut p = Parser::new(&mut lex);
+        let program = p.parse_program();
+
+        assert_eq!(
+            program.statements.len(),
+            1,
+            "program.statements does not contain 1 statements. {:?}",
+            program.statements
+        );
+        check_parser_errors(p);
+        if let Stmt::Expr(Expr::Literal(Literal::Bool(val))) = &program.statements[0] {
+            assert_eq!(*val, expect);
+        }
+    }
+}
+
+#[test]
 fn test_parse_prefix_expr() {
     let prefix_tests = vec![
             ("!5;", Prefix::Not, 5),

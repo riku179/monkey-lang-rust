@@ -115,6 +115,8 @@ impl<'a> Parser<'a> {
         let mut left_opt = match self.cur_token {
                 Token::IDENT(_) => self.parse_identifier(),
                 Token::INT(_) => self.parse_integer_literal(),
+                Token::TRUE
+                | Token::FALSE => self.parse_bool_literal(),
                 Token::PLUS => self.parse_prefix_expr(),
                 Token::MINUS => self.parse_prefix_expr(),
                 Token::BANG => self.parse_prefix_expr(),
@@ -163,6 +165,14 @@ impl<'a> Parser<'a> {
             Some(Expr::Literal(Literal::Int(val)))
         } else {
             None
+        }
+    }
+
+    fn parse_bool_literal(&mut self) -> Option<Expr> {
+        match self.cur_token {
+            Token::TRUE => Some(Expr::Literal(Literal::Bool(true))),
+            Token::FALSE => Some(Expr::Literal(Literal::Bool(false))),
+            _ => None
         }
     }
 

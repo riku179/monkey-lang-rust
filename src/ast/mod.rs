@@ -74,12 +74,14 @@ impl fmt::Display for Expr {
 #[derive(PartialEq, Clone, Debug)]
 pub enum Literal {
     Int(i64),
+    Bool(bool),
 }
 
 impl fmt::Display for Literal {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Literal::Int(val) => write!(f, "{}", val)
+            Literal::Int(val) => write!(f, "{}", val),
+            Literal::Bool(val) => write!(f, "{}", val),
         }
     }
 }
