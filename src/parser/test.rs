@@ -192,3 +192,66 @@ fn test_parse_infix_expr() {
         }
     }
 }
+
+#[test]
+fn test_operator_precedence_parsing() {
+    let test_cases = vec![
+        (
+            "-a * b",
+            "((-a) * b)",
+        ),
+        (
+            "!-a",
+            "(!(-a))"
+        ),
+        (
+            "a + b + c",
+            "((a + b) + c)"
+        ),
+        (
+            "a + b - c",
+            "((a + b) - c)"
+        ),
+        (
+            "a * b * c",
+            "((a * b) * c)"
+        ),
+        (
+            "a * b / c",
+            "((a * b) / c)"
+        ),
+        (
+            "a + b / c",
+            "(a + (b / c))"
+        ),
+        (
+            "a + b * c + d / e - f",
+            "(((a + (b * c)) + (d / e)) - f)"
+        ),
+        (
+            "3 + 4; -5 * 5",
+            "(3 + 4)((-5) * 5)"
+        ),
+        (
+            "5 > 4 == 3 < 4",
+            "((5 > 4) == (3 < 4))"
+        ),
+        (
+            "5 < 4 != 3 > 4",
+            "((5 < 4) != (3 > 4))"
+        ),
+        (
+            "3 + 4 * 5 == 3 * 1 + 4 * 5",
+            "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"
+        )
+    ];
+
+    for (input, expect) in test_cases {
+        let mut l = lexer::Lexer::new(AsciiString::from_ascii(input).unwrap());
+        let mut p = Parser::new(&mut l);
+        let program = p.parse_program();
+        check_parser_errors(p);
+
+        assert_eq!(format!("{}", program), expect, "debug: {:?}", program);
+    }
+}

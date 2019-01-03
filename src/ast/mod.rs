@@ -6,6 +6,16 @@ pub struct Program {
     pub statements: Vec<Stmt>,
 }
 
+impl fmt::Display for Program {
+    fn fmt (&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut s = String::new();
+        for stmt in &self.statements {
+            s.push_str(&format!("{}", stmt))
+        }
+        write!(f, "{}", s)
+    }
+}
+
 impl Program {
     pub fn new() -> Program {
         Program {
@@ -17,6 +27,12 @@ impl Program {
 #[derive(PartialEq, Debug)]
 pub struct Ident(pub String);
 
+impl fmt::Display for Ident {
+    fn fmt (&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 #[derive(PartialEq, Debug)]
 pub enum Stmt {
     // Let(Ident, Expr),
@@ -24,6 +40,16 @@ pub enum Stmt {
     // Return(Expr),
     Return,
     Expr(Expr),
+}
+
+impl fmt::Display for Stmt {
+    fn fmt (&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Stmt::Let(ident) => write!(f, "{}", ident),
+            Stmt::Return => write!(f, "return"),
+            Stmt::Expr(expr) => write!(f, "{}", expr)
+        }
+    }
 }
 
 #[derive(PartialEq, Debug)]
@@ -34,9 +60,28 @@ pub enum Expr {
     Infix(Box<Expr>, Infix, Box<Expr>),
 }
 
+impl fmt::Display for Expr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Expr::Ident(ident) => write!(f, "{}", ident),
+            Expr::Literal(literal) => write!(f, "{}", literal),
+            Expr::Prefix(prefix, expr) => write!(f, "({}{})", prefix, expr),
+            Expr::Infix(left, infix, right) => write!(f, "({} {} {})", left, infix, right),
+        }
+    }
+}
+
 #[derive(PartialEq, Clone, Debug)]
 pub enum Literal {
     Int(i64),
+}
+
+impl fmt::Display for Literal {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Literal::Int(val) => write!(f, "{}", val)
+        }
+    }
 }
 
 #[derive(PartialEq, Debug)]
@@ -102,8 +147,8 @@ impl fmt::Display for Infix {
             Infix::Minus => write!(f, "-"),
             Infix::Divide => write!(f, "/"),
             Infix::Multiply => write!(f, "*"),
-            Infix::Equal => write!(f, "="),
-            Infix::NotEqual => write!(f, "!"),
+            Infix::Equal => write!(f, "=="),
+            Infix::NotEqual => write!(f, "!="),
             Infix::GreaterThan => write!(f, ">"),
             Infix::LessThan => write!(f, "<"),
         }
