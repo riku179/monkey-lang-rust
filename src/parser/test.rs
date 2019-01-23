@@ -268,9 +268,28 @@ fn test_if_expr() {
     check_parser_errors(p);
     check_stmt_len(&program, 1);
 
-    if let Stmt::Expr(Expr::If(box cond, box cons, alter)) = &program.statements[0] {
+    if let Stmt::Expr(Expr::If(box cond, box cons, None)) = &program.statements[0] {
         util::check_infix_expr(cond, "x", Infix::LessThan, "y");
         util::check_stmt(cons, "x");
-        assert!(alter.is_none())
+    } else {
+        panic!("this is not 'if statement!");
+    }
+}
+
+#[test]
+fn tet_if_else_expr() {
+    let input = r#"if (x < y) { x } else { y }"#;
+    let mut l = Lexer::new(AsciiString::from_ascii(input).unwrap());
+    let mut p = Parser::new(&mut l);
+    let program = p.parse_program();
+    check_parser_errors(p);
+    check_stmt_len(&program, 1);
+
+    if let Stmt::Expr(Expr::If(box cond, box cons, Some(alter))) = &program.statements[0] {
+        util::check_infix_expr(cond, "x", Infix::LessThan, "y");
+        util::check_stmt(cons, "x");
+        util::check_stmt(alter, "y")
+    } else {
+        panic!("this is not 'if else' statement!");
     }
 }
