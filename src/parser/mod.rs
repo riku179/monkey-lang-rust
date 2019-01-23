@@ -1,9 +1,11 @@
 use crate::ast::{Expr, Ident, Literal, Program, Stmt, Prefix, Infix};
-use crate::lexer;
+use crate::lexer::Lexer;
 use crate::token::Token;
 
 #[cfg(test)]
 mod test;
+
+mod test_util;
 
 #[derive(PartialOrd, PartialEq)]
 enum Priority {
@@ -18,7 +20,7 @@ enum Priority {
 
 #[derive(Debug)]
 struct Parser<'a> {
-    lex: &'a mut lexer::Lexer,
+    lex: &'a mut Lexer,
     pub errors: Vec<String>,
 
     cur_token: Token,
@@ -26,7 +28,7 @@ struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    fn new(lex: &'a mut lexer::Lexer) -> Parser<'a> {
+    fn new(lex: &'a mut Lexer) -> Parser<'a> {
         let cur_token = lex.next_token();
         let peek_token = lex.next_token();
 

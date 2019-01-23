@@ -1,7 +1,10 @@
-use super::*;
-use crate::ast::{Expr, Ident, Literal, Prefix, Infix, Stmt};
-use crate::lexer;
 use ascii::AsciiString;
+use super::*;
+use super::test_util::Literable;
+use super::test_util as util;
+use crate::ast::{Expr, Ident, Literal, Prefix, Infix, Stmt};
+use crate::lexer::Lexer;
+
 
 fn check_parser_errors(p: Parser) {
     let errors = p.errors;
@@ -19,6 +22,16 @@ fn check_parser_errors(p: Parser) {
     panic!("failed to parse!");
 }
 
+fn check_stmt_len(program: &Program, len: usize) {
+    assert_eq!(
+        program.statements.len(),
+        len,
+        "program.statements does not contain {} statements. got {}",
+        len,
+        program
+    );
+}
+
 #[test]
 fn test_let_stmts() {
     let input = AsciiString::from_ascii(
@@ -30,27 +43,17 @@ fn test_let_stmts() {
     )
     .unwrap();
 
-    let mut lex = lexer::Lexer::new(input);
+    let mut lex = Lexer::new(input);
     let mut p = Parser::new(&mut lex);
 
     let program = p.parse_program();
     check_parser_errors(p);
-    assert_eq!(
-        program.statements.len(),
-        3,
-        "program.statements does not contain 3 statements. got {:?}",
-        program.statements
-    );
+    check_stmt_len(&program, 3);
 
     let expected_results = vec!["x", "y", "foobar"];
 
     for (i, expected) in expected_results.iter().enumerate() {
-        let stmt = &program.statements[i];
-        if let Stmt::Let(Ident(name)) = stmt {
-            assert_eq!(name, expected);
-        } else {
-            panic!(format!("Type error. got {:?}", &program.statements[i]));
-        }
+        util::check_let_stmt(&program.statements[i], expected)
     }
 }
 
@@ -65,17 +68,12 @@ fn test_return_stmt() {
     )
     .unwrap();
 
-    let mut lex = lexer::Lexer::new(input);
+    let mut lex = Lexer::new(input);
     let mut psr = Parser::new(&mut lex);
 
     let program = psr.parse_program();
     check_parser_errors(psr);
-    assert_eq!(
-        program.statements.len(),
-        3,
-        "program.statements does not contain 3 statements. got {:?}",
-        program.statements
-    );
+    check_stmt_len(&program, 3);
 
     for stmt in program.statements {
         assert_eq!(stmt, Stmt::Return);
@@ -86,44 +84,28 @@ fn test_return_stmt() {
 fn test_ident_expr() {
     let input = AsciiString::from_ascii(r#"foobar;"#).unwrap();
 
-    let mut lex = lexer::Lexer::new(input);
+    let mut lex = Lexer::new(input);
     let mut p = Parser::new(&mut lex);
 
     let program = p.parse_program();
     check_parser_errors(p);
-    assert_eq!(
-        program.statements.len(),
-        1,
-        "program.statements does not contain 1 statements. {:?}",
-        program.statements
-    );
+    check_stmt_len(&program, 1);
 
-    if let Stmt::Expr(Expr::Ident(Ident(value))) = &program.statements[0] {
-        assert_eq!(value, "foobar");
-    };
+    util::check_stmt(&program.statements[0], "foobar")
 }
 
 #[test]
 fn test_integer_literal_expr() {
     let input = AsciiString::from_ascii(r#"5;"#).unwrap();
 
-    let mut lex = lexer::Lexer::new(input);
+    let mut lex = Lexer::new(input);
     let mut p = Parser::new(&mut lex);
 
     let program = p.parse_program();
     check_parser_errors(p);
-    assert_eq!(
-        program.statements.len(),
-        1,
-        "program.statements does not contain 1 statements. {:?}",
-        program.statements
-    );
+    check_stmt_len(&program, 1);
 
-    if let Stmt::Expr(Expr::Literal(Literal::Int(val))) = &program.statements[0] {
-        assert_eq!(*val, 5);
-    } else {
-        panic!(format!("Type error. got {:?}", &program.statements[0]));
-    }
+    util::check_stmt(&program.statements[0], 5)
 }
 
 #[test]
@@ -134,20 +116,13 @@ fn test_boolean_literal_expr() {
     ];
 
     for (input, expect) in test_cases {
-        let mut lex = lexer::Lexer::new(AsciiString::from_ascii(input).unwrap());
+        let mut lex = Lexer::new(AsciiString::from_ascii(input).unwrap());
         let mut p = Parser::new(&mut lex);
         let program = p.parse_program();
 
-        assert_eq!(
-            program.statements.len(),
-            1,
-            "program.statements does not contain 1 statements. {:?}",
-            program.statements
-        );
         check_parser_errors(p);
-        if let Stmt::Expr(Expr::Literal(Literal::Bool(val))) = &program.statements[0] {
-            assert_eq!(*val, expect);
-        }
+        check_stmt_len(&program, 1);
+        util::check_stmt(&program.statements[0], expect)
     }
 }
 
@@ -159,17 +134,11 @@ fn test_parse_prefix_expr() {
     ];
 
     for (input, expect_prefix, expect_val) in prefix_tests {
-        let mut l = lexer::Lexer::new(AsciiString::from_ascii(input).unwrap());
+        let mut l = Lexer::new(AsciiString::from_ascii(input).unwrap());
         let mut p = Parser::new(&mut l);
         let program = p.parse_program();
         check_parser_errors(p);
-
-        assert_eq!(
-            program.statements.len(),
-            1,
-            "program.statements does not contain 1 statements. got {:?}",
-            program.statements
-        );
+        check_stmt_len(&program, 1);
 
         if let Stmt::Expr(Expr::Prefix(prefix, box Expr::Literal(Literal::Int(val)))) =
             &program.statements[0]
@@ -196,25 +165,13 @@ fn test_parse_infix_expr() {
     ];
 
     for (input, expect_left, expect_infix, expect_right) in infix_tests {
-        let mut l = lexer::Lexer::new(AsciiString::from_ascii(input).unwrap());
+        let mut l = Lexer::new(AsciiString::from_ascii(input).unwrap());
         let mut p = Parser::new(&mut l);
         let program = p.parse_program();
         check_parser_errors(p);
+        check_stmt_len(&program, 1);
 
-        assert_eq!(
-            program.statements.len(),
-            1,
-            "program.statements does not contain 1 statements. got {:?}",
-            program.statements
-        );
-
-        if let Stmt::Expr(Expr::Infix(box Expr::Literal(Literal::Int(left)), infix, box Expr::Literal(Literal::Int(right)))) = &program.statements[0] {
-            assert_eq!(*left, expect_left);
-            assert_eq!(*infix, expect_infix);
-            assert_eq!(*right, expect_right);
-        } else {
-            panic!(format!("Type error. got {:?}", &program.statements[0]));
-        }
+        util::check_infix_stmt(&program.statements[0], expect_left, expect_infix, expect_right)
     }
 }
 
@@ -292,11 +249,28 @@ fn test_operator_precedence_parsing() {
     ];
 
     for (input, expect) in test_cases {
-        let mut l = lexer::Lexer::new(AsciiString::from_ascii(input).unwrap());
+        let mut l = Lexer::new(AsciiString::from_ascii(input).unwrap());
         let mut p = Parser::new(&mut l);
         let program = p.parse_program();
         check_parser_errors(p);
 
         assert_eq!(format!("{}", program), expect, "debug: {:?}", program);
+    }
+}
+
+#[test]
+fn test_if_expr() {
+    let input = r#"if (x < y) { x }"#;
+
+    let mut l = Lexer::new(AsciiString::from_ascii(input).unwrap());
+    let mut p = Parser::new(&mut l);
+    let program = p.parse_program();
+    check_parser_errors(p);
+    check_stmt_len(&program, 1);
+
+    if let Stmt::Expr(Expr::If(box cond, box cons, alter)) = &program.statements[0] {
+        util::check_infix_expr(cond, "x", Infix::LessThan, "y");
+        util::check_stmt(cons, "x");
+        assert!(alter.is_none())
     }
 }

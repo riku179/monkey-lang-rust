@@ -40,6 +40,7 @@ pub enum Stmt {
     // Return(Expr),
     Return,
     Expr(Expr),
+    Block(Vec<Stmt>),
 }
 
 impl fmt::Display for Stmt {
@@ -47,7 +48,14 @@ impl fmt::Display for Stmt {
         match self {
             Stmt::Let(ident) => write!(f, "{}", ident),
             Stmt::Return => write!(f, "return"),
-            Stmt::Expr(expr) => write!(f, "{}", expr)
+            Stmt::Expr(expr) => write!(f, "{}", expr),
+            Stmt::Block(stmts) => {
+                let mut ret = Ok(());
+                for stmt in stmts {
+                    ret = write!(f, "{}", stmt);
+                };
+                ret
+            }
         }
     }
 }
@@ -58,6 +66,7 @@ pub enum Expr {
     Literal(Literal),
     Prefix(Prefix, Box<Expr>),
     Infix(Box<Expr>, Infix, Box<Expr>),
+    If(Box<Expr>, Box<Stmt>, Option<Box<Stmt>>)
 }
 
 impl fmt::Display for Expr {
@@ -67,6 +76,13 @@ impl fmt::Display for Expr {
             Expr::Literal(literal) => write!(f, "{}", literal),
             Expr::Prefix(prefix, expr) => write!(f, "({}{})", prefix, expr),
             Expr::Infix(left, infix, right) => write!(f, "({} {} {})", left, infix, right),
+            Expr::If(cond, cons, alter) => {
+                if let Some(box stmt) = alter {
+                    write!(f, "if {} {} else {}", cond, cons, stmt)
+                } else {
+                    write!(f, "if {} {}", cond, cons)
+                }
+            }
         }
     }
 }
