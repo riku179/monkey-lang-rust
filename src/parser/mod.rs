@@ -115,45 +115,40 @@ impl<'a> Parser<'a> {
     fn parse_expression(&mut self, priority: Priority) -> Option<Expr> {
 
         // prefix
-        let mut left_opt = match self.cur_token {
-                Token::IDENT(_) => self.parse_identifier(),
-                Token::INT(_) => self.parse_integer_literal(),
-                Token::TRUE
-                | Token::FALSE => self.parse_bool_literal(),
-                Token::PLUS => self.parse_prefix_expr(),
-                Token::MINUS => self.parse_prefix_expr(),
-                Token::BANG => self.parse_prefix_expr(),
-                Token::LPAREN => self.parse_grouped_expr(),
-                _ => {
-                    self.errors.push(format!("unknown token in expression. got {:?}", self.cur_token));
-                    None
-                }
-            };
-        
-        // infix
-        if let Some(mut left) = left_opt {
-            // not end of a statement and next token has more priority than current token
-            while !self.peek_token_is(&Token::SEMICOLON) && priority < self.peek_priority() {
-                left_opt = match self.peek_token {
-                    | Token::PLUS
-                    | Token::MINUS
-                    | Token::SLASH
-                    | Token::ASTERISK
-                    | Token::EQ
-                    | Token::NOTEQ
-                    | Token::LT
-                    | Token::GT => {
-                        self.next_token();
-                        self.parse_infix_expr(left)
-                    }
-                    _ => return Some(left)
-                };
-                left = left_opt.expect("expression function not found.")
+        let mut left = match self.cur_token {
+            Token::IDENT(_) => self.parse_identifier(),
+            Token::INT(_) => self.parse_integer_literal(),
+            Token::TRUE
+            | Token::FALSE => self.parse_bool_literal(),
+            Token::PLUS => self.parse_prefix_expr(),
+            Token::MINUS => self.parse_prefix_expr(),
+            Token::BANG => self.parse_prefix_expr(),
+            Token::LPAREN => self.parse_grouped_expr(),
+            Token::IF => self.parse_if_expr(),
+            _ => {
+                self.errors.push(format!("unknown token in expression. got {:?}", self.cur_token));
+                None
             }
-            Some(left)
-        } else {
-            None
+        }?;
+        
+        // not end of a statement and next token has more priority than current token
+        while !self.peek_token_is(&Token::SEMICOLON) && priority < self.peek_priority() {
+            left = match self.peek_token {
+                | Token::PLUS
+                | Token::MINUS
+                | Token::SLASH
+                | Token::ASTERISK
+                | Token::EQ
+                | Token::NOTEQ
+                | Token::LT
+                | Token::GT => {
+                    self.next_token();
+                    self.parse_infix_expr(left)?
+                }
+                _ => return Some(left)
+            };
         }
+        Some(left)
     }
 
     fn parse_identifier(&self) -> Option<Expr> {
@@ -185,16 +180,13 @@ impl<'a> Parser<'a> {
 
         self.next_token();
 
-        if let Some(expr) = self.parse_expression(Priority::PREFIX) {
-            match Prefix::from_token(&cur_token) {
-                Ok(prefix) => Some(Expr::Prefix(prefix, Box::new(expr))),
-                Err(err) => {
-                    self.errors.push(err);
-                    None
-                }
+        let expr = self.parse_expression(Priority::PREFIX)?;
+        match Prefix::from_token(&cur_token) {
+            Ok(prefix) => Some(Expr::Prefix(prefix, Box::new(expr))),
+            Err(err) => {
+                self.errors.push(err);
+                None
             }
-        } else {
-            None
         }
     }
 
@@ -203,16 +195,13 @@ impl<'a> Parser<'a> {
         let priority = self.cur_priority(); // SUM
         self.next_token();
 
-        if let Some(right) = self.parse_expression(priority) {
-            match Infix::from_token(&cur_token) {
-                Ok(infix) => Some(Expr::Infix(Box::new(left), infix, Box::new(right))),
-                Err(err) => {
-                    self.errors.push(err);
-                    None
-                },
-            }
-        } else {
-            None
+        let right = self.parse_expression(priority)?;
+        match Infix::from_token(&cur_token) {
+            Ok(infix) => Some(Expr::Infix(Box::new(left), infix, Box::new(right))),
+            Err(err) => {
+                self.errors.push(err);
+                None
+            },
         }
     }
 
@@ -226,6 +215,53 @@ impl<'a> Parser<'a> {
         } else {
             expr
         }
+    }
+
+    fn parse_if_expr(&mut self) -> Option<Expr> {
+        if !self.expect_peek(&Token::LPAREN) {
+            return None
+        }
+
+        self.next_token();
+
+        let cond = self.parse_expression(Priority::LOWEST)?;
+
+        if !self.expect_peek(&Token::RPAREN) {
+            return None
+        }
+
+        if !self.expect_peek(&Token::LBRACE) {
+            return None
+        }
+
+        let cons = self.parse_block_stmt();
+
+        let mut alter = None;
+
+        if self.peek_token_is(&Token::ELSE) {
+            self.next_token();
+
+            if !self.expect_peek(&Token::LBRACE) {
+                return None
+            }
+            alter = Some(Box::new(self.parse_block_stmt()));
+        }
+
+        Some(Expr::If(Box::new(cond), Box::new(cons), alter))
+    }
+
+    fn parse_block_stmt(&mut self) -> Stmt {
+        self.next_token();
+
+        let mut stmts = Vec::new();
+        while !self.cur_token_is(&Token::RBRACE) && !self.cur_token_is(&Token::EOF) {
+            if let Some(stmt) = self.parse_statement() {
+                stmts.push(stmt);
+            }
+            self.next_token();
+        }
+
+        Stmt::Block(stmts)
     }
 
     fn cur_token_is(&self, tok: &Token) -> bool {

@@ -268,11 +268,11 @@ fn test_if_expr() {
     check_parser_errors(p);
     check_stmt_len(&program, 1);
 
-    if let Stmt::Expr(Expr::If(box cond, box cons, None)) = &program.statements[0] {
+    if let Stmt::Expr(Expr::If(box cond, box Stmt::Block(cons_stmts), None)) = &program.statements[0] {
         util::check_infix_expr(cond, "x", Infix::LessThan, "y");
-        util::check_stmt(cons, "x");
+        util::check_stmt(&cons_stmts[0], "x");
     } else {
-        panic!("this is not 'if statement!");
+        panic!("this is not expected 'if' statement!");
     }
 }
 
@@ -285,11 +285,11 @@ fn tet_if_else_expr() {
     check_parser_errors(p);
     check_stmt_len(&program, 1);
 
-    if let Stmt::Expr(Expr::If(box cond, box cons, Some(alter))) = &program.statements[0] {
+    if let Stmt::Expr(Expr::If(box cond, box Stmt::Block(cons_stmts), Some(box Stmt::Block(alter_stmts)))) = &program.statements[0] {
         util::check_infix_expr(cond, "x", Infix::LessThan, "y");
-        util::check_stmt(cons, "x");
-        util::check_stmt(alter, "y")
+        util::check_stmt(&cons_stmts[0], "x");
+        util::check_stmt(&alter_stmts[0], "y")
     } else {
-        panic!("this is not 'if else' statement!");
+        panic!("this is not expected 'if else' statement!");
     }
 }

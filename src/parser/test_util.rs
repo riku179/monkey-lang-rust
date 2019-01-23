@@ -7,7 +7,7 @@ pub trait Literable: Sized {
         if let Stmt::Expr(expr) = stmt {
             self.check_expr(expr)
         } else {
-            panic!(format!("this stmt is not include expr. got {}", stmt));
+            panic!(format!("this stmt is not include expr. got {:?}", stmt));
         }
     }
 }
