@@ -99,17 +99,14 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_expression_statement(&mut self) -> Option<Stmt> {
-        if let Some(expr) = self.parse_expression(Priority::LOWEST) {
-            let stmt = Stmt::Expr(expr);
+        let expr = self.parse_expression(Priority::LOWEST)?;
+        let stmt = Stmt::Expr(expr);
 
-            if self.peek_token_is(&Token::SEMICOLON) {
-                self.next_token()
-            };
+        if self.peek_token_is(&Token::SEMICOLON) {
+            self.next_token()
+        };
 
-            Some(stmt)
-        } else {
-            None
-        }
+        Some(stmt)
     }
 
     fn parse_expression(&mut self, priority: Priority) -> Option<Expr> {
