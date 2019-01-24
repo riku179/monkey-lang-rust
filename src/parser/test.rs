@@ -277,7 +277,7 @@ fn test_if_expr() {
 }
 
 #[test]
-fn tet_if_else_expr() {
+fn test_if_else_expr() {
     let input = r#"if (x < y) { x } else { y }"#;
     let mut l = Lexer::new(AsciiString::from_ascii(input).unwrap());
     let mut p = Parser::new(&mut l);
@@ -291,5 +291,24 @@ fn tet_if_else_expr() {
         util::check_stmt(&alter_stmts[0], "y")
     } else {
         panic!("this is not expected 'if else' statement!");
+    }
+}
+
+#[test]
+fn test_function_literal_parse() {
+    let input = r#"fn (x, y) { x + y; }"#;
+    let mut l = Lexer::new(AsciiString::from_ascii(input).unwrap());
+    let mut p = Parser::new(&mut l);
+    let program = p.parse_program();
+    check_parser_errors(p);
+    check_stmt_len(&program, 1);
+
+    if let Stmt::Expr(Expr::Function(params, box Stmt::Block(stmts))) = &program.statements[0] {
+        assert_eq!(params.len(), 2);
+        assert_eq!(params[0].0, "x");
+        assert_eq!(params[1].0, "y");
+
+        assert_eq!(stmts.len(), 2);
+        util::check_infix_stmt(&stmts[0], "x", Infix::Plus, "y");
     }
 }
