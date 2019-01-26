@@ -1,11 +1,27 @@
-version: 2
+version: 2.1
+
+orbs:
+  codecov: codecov/codecov
+
 jobs:
     test:
         docker:
             - image: circleci/rust:latest
         steps:
             - checkout
-            - run: cargo test
+            - restore_cache:
+                keys:
+                    - cargo-{{ checksum "Cargo.lock" }}
+                    - cargo-
+            - RUSTFLAGS="--cfg procmacro2_semver_exempt" cargo install cargo-tarpaulin
+            - cargo tarpaulin --ciserver circle-ci --ignore-tests --out Xml
+            - save_cache:
+                key: cargo-{{ checksum "Cargo.lock" }}
+                paths:
+                    - "~/.cargo"
+                    - "./target"
+            - codecov/upload:
+                file: "./cobertura.xml"
 
 workflows:
     version: 2

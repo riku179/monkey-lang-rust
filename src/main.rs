@@ -8,6 +8,7 @@ mod token;
 
 use std::io;
 
+#[cfg_attr(tarpaulin, skip)]
 fn main() {
     println!("Hello! This is the Monky programming language!");
     println!("Feel free to type in commands!");
