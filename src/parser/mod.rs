@@ -122,6 +122,7 @@ impl<'a> Parser<'a> {
             Token::BANG => self.parse_prefix_expr(),
             Token::LPAREN => self.parse_grouped_expr(),
             Token::IF => self.parse_if_expr(),
+            Token::FUNCTION => self.parse_function_literal(),
             _ => {
                 self.errors.push(format!("unknown token in expression. got {:?}", self.cur_token));
                 None
@@ -259,6 +260,46 @@ impl<'a> Parser<'a> {
         }
 
         Stmt::Block(stmts)
+    }
+
+    fn parse_function_literal(&mut self) -> Option<Expr> {
+        if !self.expect_peek(&Token::LPAREN) {
+            return None
+        }
+        let params = self.parse_function_params();
+
+        if !self.expect_peek(&Token::LBRACE) {
+            None
+        } else {
+            Some(Expr::Function(params, Box::new(self.parse_block_stmt())))
+        }
+    }
+
+    fn parse_function_params(&mut self) -> Vec<Ident> {
+        let mut idents = Vec::new();
+
+        if self.peek_token_is(&Token::RPAREN) {
+            self.next_token();
+            return idents
+        }
+
+        self.next_token();
+
+        let ident = Ident(format!("{}", self.cur_token));
+        idents.push(ident);
+        
+        while self.peek_token_is(&Token::COMMA) {
+            self.next_token(); // skip comma
+            self.next_token();
+            let ident = Ident(format!("{}", self.cur_token));
+            idents.push(ident)
+        }
+
+        if !self.expect_peek(&Token::RPAREN) {
+            return vec![]
+        }
+
+        return idents
     }
 
     fn cur_token_is(&self, tok: &Token) -> bool {

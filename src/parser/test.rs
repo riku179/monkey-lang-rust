@@ -308,7 +308,42 @@ fn test_function_literal_parse() {
         assert_eq!(params[0].0, "x");
         assert_eq!(params[1].0, "y");
 
-        assert_eq!(stmts.len(), 2);
+        assert_eq!(stmts.len(), 1);
         util::check_infix_stmt(&stmts[0], "x", Infix::Plus, "y");
+    }
+}
+
+#[test]
+fn test_function_param_parse() {
+    let test_cases = vec![
+        (
+            "fn() {};",
+            vec![]
+        ),
+        (
+            "fn(x) {};",
+            vec!["x"]
+        ),
+        (
+            "fn(x, y, z) {};",
+            vec!["x", "y", "z"]
+        )
+    ];
+
+    for (input, expect) in test_cases {
+        let mut l = Lexer::new(AsciiString::from_ascii(input).unwrap());
+        let mut p = Parser::new(&mut l);
+        let program = p.parse_program();
+        check_parser_errors(p);       
+
+        if let Stmt::Expr(Expr::Function(params, _)) = &program.statements[0] {
+            assert_eq!(params.len(), expect.len());
+
+            for (Ident(actual_param), expect_param) in params.iter().zip(expect.iter()) {
+                assert_eq!(actual_param, expect_param);
+            }
+        } else {
+            unreachable!()
+        }
     }
 }
