@@ -91,7 +91,7 @@ impl fmt::Display for Expr {
             },
             Expr::Call(box func, params) => {
                 let params_string: Vec<String> = params.iter().map(|param| format!("{}", param)).collect();
-                write!(f, "{} ({})", func, params_string.join(", "))
+                write!(f, "{}({})", func, params_string.join(", "))
             }
         }
     }
