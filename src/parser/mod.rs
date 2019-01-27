@@ -132,7 +132,7 @@ impl<'a> Parser<'a> {
         // not end of a statement and next token has more priority than current token
         while !self.peek_token_is(&Token::SEMICOLON) && priority < self.peek_priority() {
             left = match self.peek_token {
-                | Token::PLUS
+                Token::PLUS
                 | Token::MINUS
                 | Token::SLASH
                 | Token::ASTERISK
@@ -142,6 +142,10 @@ impl<'a> Parser<'a> {
                 | Token::GT => {
                     self.next_token();
                     self.parse_infix_expr(left)?
+                }
+                Token::LPAREN => {
+                    self.next_token();
+                    self.parse_call_expr(left)?
                 }
                 _ => return Some(left)
             };
@@ -302,6 +306,34 @@ impl<'a> Parser<'a> {
         return idents
     }
 
+    fn parse_call_expr(&mut self, func: Expr) -> Option<Expr> {
+        Some(Expr::Call(Box::new(func), self.parse_call_args()))
+    }
+
+    fn parse_call_args(&mut self) -> Vec<Expr> {
+        let mut args = Vec::new();
+
+        if self.peek_token_is(&Token::RPAREN) {
+            self.next_token();
+            return args
+        }
+
+        self.next_token();
+        args.push(self.parse_expression(Priority::LOWEST).expect("args"));
+
+        while self.peek_token_is(&Token::COMMA) {
+            self.next_token();
+            self.next_token();
+            args.push(self.parse_expression(Priority::LOWEST).expect("args"))
+        }
+
+        if !self.expect_peek(&Token::RPAREN) {
+            return vec![]
+        }
+
+        args
+    }
+
     fn cur_token_is(&self, tok: &Token) -> bool {
         self.cur_token == *tok
     }
@@ -337,6 +369,7 @@ impl<'a> Parser<'a> {
             Token::MINUS => Priority::SUM,
             Token::SLASH => Priority::PRODUCT,
             Token::ASTERISK => Priority::PRODUCT,
+            Token::LPAREN => Priority::CALL,
             _ => Priority::LOWEST,
         }
     }
