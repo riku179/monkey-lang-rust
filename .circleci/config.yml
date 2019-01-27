@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  codecov: codecov/codecov
+  codecov: codecov/codecov@1.0.3
 
 jobs:
     test:
@@ -13,8 +13,12 @@ jobs:
                 keys:
                     - cargo-{{ checksum "Cargo.lock" }}
                     - cargo-
-            - RUSTFLAGS="--cfg procmacro2_semver_exempt" cargo install cargo-tarpaulin
-            - cargo tarpaulin --ciserver circle-ci --ignore-tests --out Xml
+            - run:
+                name: install-tarpaulin
+                command: RUSTFLAGS="--cfg procmacro2_semver_exempt" cargo install cargo-tarpaulin
+            - run:
+                name: test-and-get-cov
+                command: cargo tarpaulin --ciserver circle-ci --ignore-tests --out Xml
             - save_cache:
                 key: cargo-{{ checksum "Cargo.lock" }}
                 paths:
