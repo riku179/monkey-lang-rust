@@ -146,7 +146,7 @@ fn test_parse_prefix_expr() {
             assert_eq!(*prefix, expect_prefix);
             assert_eq!(*val, expect_val);
         } else {
-            panic!(format!("Type error. got {:?}", &program.statements[0]));
+            unreachable!()
         };
     }
 }
@@ -272,7 +272,7 @@ fn test_if_expr() {
         util::check_infix_expr(cond, "x", Infix::LessThan, "y");
         util::check_stmt(&cons_stmts[0], "x");
     } else {
-        panic!("this is not expected 'if' statement!");
+        unreachable!()
     }
 }
 
@@ -290,7 +290,7 @@ fn test_if_else_expr() {
         util::check_stmt(&cons_stmts[0], "x");
         util::check_stmt(&alter_stmts[0], "y")
     } else {
-        panic!("this is not expected 'if else' statement!");
+        unreachable!()
     }
 }
 
@@ -310,6 +310,8 @@ fn test_function_literal_parse() {
 
         assert_eq!(stmts.len(), 1);
         util::check_infix_stmt(&stmts[0], "x", Infix::Plus, "y");
+    } else {
+        unreachable!()
     }
 }
 
@@ -334,13 +336,71 @@ fn test_function_param_parse() {
         let mut l = Lexer::new(AsciiString::from_ascii(input).unwrap());
         let mut p = Parser::new(&mut l);
         let program = p.parse_program();
-        check_parser_errors(p);       
+        check_parser_errors(p);
 
         if let Stmt::Expr(Expr::Function(params, _)) = &program.statements[0] {
             assert_eq!(params.len(), expect.len());
 
             for (Ident(actual_param), expect_param) in params.iter().zip(expect.iter()) {
                 assert_eq!(actual_param, expect_param);
+            }
+        } else {
+            unreachable!()
+        }
+    }
+}
+
+#[test]
+fn test_call_expr_parse() {
+    let input = "add(1, 2 * 3, 4 + 5)";
+    let mut l = Lexer::new(AsciiString::from_ascii(input).unwrap());
+    let mut p = Parser::new(&mut l);
+    let program = p.parse_program();
+    check_parser_errors(p);
+    check_stmt_len(&program, 1);
+
+    if let Stmt::Expr(Expr::Call(box func, params)) = &program.statements[0] {
+        util::check_expr(func, "add");
+        assert_eq!(params.len(), 3);
+        util::check_expr(&params[0], 1);
+        util::check_infix_expr(&params[1], 2, Infix::Multiply, 3);
+        util::check_infix_expr(&params[2], 4, Infix::Plus, 5);
+    } else {
+        unreachable!()
+    }
+}
+
+#[test]
+fn test_call_expr_param_parse() {
+    let test_cases = vec![
+        (
+            "add();",
+            "add",
+            vec![]
+        ),
+        (
+            "add(1);",
+            "add",
+            vec!["1"]
+        ),
+        (
+            "add(1, 2 * 3, 4 + 5);",
+            "add",
+            vec!["1", "(2 * 3)", "(4 + 5)"]
+        )
+    ];
+
+    for (input, expect_ident, expect_args) in test_cases {
+        let mut l = Lexer::new(AsciiString::from_ascii(input).unwrap());
+        let mut p = Parser::new(&mut l);
+        let program = p.parse_program();
+        check_parser_errors(p);
+
+        if let Stmt::Expr(Expr::Call(box func, params)) = &program.statements[0] {
+            util::check_expr(func, expect_ident);
+            assert_eq!(params.len(), expect_args.len());
+            for (actual, expect) in params.iter().zip(expect_args.iter()) {
+                assert_eq!(format!("{}", actual), *expect);
             }
         } else {
             unreachable!()

@@ -67,7 +67,8 @@ pub enum Expr {
     Prefix(Prefix, Box<Expr>),
     Infix(Box<Expr>, Infix, Box<Expr>),
     If(Box<Expr>, Box<Stmt>, Option<Box<Stmt>>),
-    Function(Vec<Ident>, Box<Stmt>)
+    Function(Vec<Ident>, Box<Stmt>),
+    Call(Box<Expr>, Vec<Expr>)
 }
 
 impl fmt::Display for Expr {
@@ -87,6 +88,10 @@ impl fmt::Display for Expr {
             Expr::Function(params, body) => {
                 let params_string: Vec<String> = params.iter().map(|param| param.0.clone()).collect();
                 write!(f, "fn ({}) {}", params_string.join(", "), body)
+            },
+            Expr::Call(box func, params) => {
+                let params_string: Vec<String> = params.iter().map(|param| format!("{}", param)).collect();
+                write!(f, "{} ({})", func, params_string.join(", "))
             }
         }
     }
