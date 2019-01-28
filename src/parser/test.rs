@@ -34,50 +34,71 @@ fn check_stmt_len(program: &Program, len: usize) {
 
 #[test]
 fn test_let_stmts() {
-    let input = AsciiString::from_ascii(
-        r###"
-        let x = 5;
-        let y = 10;
-        let foobar = 838383;
-        "###,
-    )
-    .unwrap();
+    let test_cases = vec![
+        (
+            "let x = 5;",
+            "x",
+            Expr::Literal(Literal::Int(5))
+        ),
+        (
+            "let y = true;",
+            "y",
+            Expr::Literal(Literal::Bool(true))
+        ),
+        (
+            "let foobar = y;",
+            "foobar",
+            Expr::Ident(Ident("y".to_string()))
+        )
+    ];
 
-    let mut lex = Lexer::new(input);
-    let mut p = Parser::new(&mut lex);
+    for (input, expect_ident, expect_expr) in test_cases {
+        let mut lex = Lexer::new(AsciiString::from_ascii(input).unwrap());
+        let mut p = Parser::new(&mut lex);
 
-    let program = p.parse_program();
-    check_parser_errors(p);
-    check_stmt_len(&program, 3);
+        let program = p.parse_program();
+        check_parser_errors(p);
+        check_stmt_len(&program, 1);
 
-    let expected_results = vec!["x", "y", "foobar"];
-
-    for (i, expected) in expected_results.iter().enumerate() {
-        util::check_let_stmt(&program.statements[i], expected)
+        if let Stmt::Let(ident, expr) = &program.statements[0] {
+            assert_eq!(format!("{}", ident), expect_ident);
+            assert_eq!(*expr, expect_expr);
+        } else {
+            unreachable!()
+        }
     }
 }
 
 #[test]
 fn test_return_stmt() {
-    let input = AsciiString::from_ascii(
-        r###"
-        return 5;
-        return 10;
-        return 993322;
-        "###,
-    )
-    .unwrap();
+    let test_cases = vec![
+        (
+            "return 5;",
+            Expr::Literal(Literal::Int(5))
+        ),
+        (
+            "return true;",
+            Expr::Literal(Literal::Bool(true))
+        ),
+        (
+            "return foobar;",
+            Expr::Ident(Ident("foobar".to_string()))
+        )
+    ];
 
-    let mut lex = Lexer::new(input);
-    let mut psr = Parser::new(&mut lex);
+    for (input, expect_expr) in test_cases {
+        let mut lex = Lexer::new(AsciiString::from_ascii(input).unwrap());
+        let mut psr = Parser::new(&mut lex);
 
-    let program = psr.parse_program();
-    check_parser_errors(psr);
-    check_stmt_len(&program, 3);
+        let program = psr.parse_program();
+        check_parser_errors(psr);
+        check_stmt_len(&program, 1);
 
-    for stmt in program.statements {
-        assert_eq!(stmt, Stmt::Return);
+        if let Stmt::Return(expr) = &program.statements[0] {
+            assert_eq!(*expr, expect_expr);
+        }
     }
+
 }
 
 #[test]

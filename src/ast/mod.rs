@@ -35,10 +35,8 @@ impl fmt::Display for Ident {
 
 #[derive(PartialEq, Debug)]
 pub enum Stmt {
-    // Let(Ident, Expr),
-    Let(Ident),
-    // Return(Expr),
-    Return,
+    Let(Ident, Expr),
+    Return(Expr),
     Expr(Expr),
     Block(Vec<Stmt>),
 }
@@ -46,8 +44,8 @@ pub enum Stmt {
 impl fmt::Display for Stmt {
     fn fmt (&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Stmt::Let(ident) => write!(f, "{}", ident),
-            Stmt::Return => write!(f, "return"),
+            Stmt::Let(ident, expr) => write!(f, "let {} = {}", ident, expr),
+            Stmt::Return(expr) => write!(f, "return {}", expr),
             Stmt::Expr(expr) => write!(f, "{}", expr),
             Stmt::Block(stmts) => {
                 let mut ret = Ok(());

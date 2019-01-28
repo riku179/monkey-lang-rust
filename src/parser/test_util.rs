@@ -57,7 +57,7 @@ pub fn check_infix_stmt<T: Literable>(stmt: &Stmt, expect_left: T, expect_infix:
 }
 
 pub fn check_let_stmt(stmt: &Stmt, expected_name: &str) {
-    if let Stmt::Let(Ident(name)) = stmt {
+    if let Stmt::Let(Ident(name), _) = stmt {
         assert_eq!(expected_name, name)
     } else {
         panic!(format!("this stmt is not 'let'. got {}", stmt));

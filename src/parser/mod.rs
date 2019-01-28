@@ -70,13 +70,15 @@ impl<'a> Parser<'a> {
         if let Token::IDENT(val) = self.peek_token.clone() {
             self.next_token();
 
-            let stmt = Stmt::Let(Ident(val));
-
             if !self.expect_peek(&Token::ASSIGN) {
-                return None;
+                return None
             }
 
-            while !self.cur_token_is(&Token::SEMICOLON) {
+            self.next_token();
+
+            let stmt = Stmt::Let(Ident(val), self.parse_expression(Priority::LOWEST)?);
+
+            while self.peek_token_is(&Token::SEMICOLON) {
                 self.next_token()
             }
 
@@ -87,11 +89,11 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_return_statement(&mut self) -> Option<Stmt> {
-        let stmt = Stmt::Return;
-
         self.next_token();
 
-        while !self.cur_token_is(&Token::SEMICOLON) {
+        let stmt = Stmt::Return(self.parse_expression(Priority::LOWEST)?);
+
+        while self.peek_token_is(&Token::SEMICOLON) {
             self.next_token();
         }
 
