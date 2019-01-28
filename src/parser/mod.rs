@@ -19,7 +19,7 @@ enum Priority {
 }
 
 #[derive(Debug)]
-struct Parser<'a> {
+pub struct Parser<'a> {
     lex: &'a mut Lexer,
     pub errors: Vec<String>,
 
@@ -28,7 +28,7 @@ struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    fn new(lex: &'a mut Lexer) -> Parser<'a> {
+    pub fn new(lex: &'a mut Lexer) -> Parser<'a> {
         let cur_token = lex.next_token();
         let peek_token = lex.next_token();
 
@@ -41,7 +41,7 @@ impl<'a> Parser<'a> {
     }
 
     /// entry point
-    fn parse_program(&mut self) -> Program {
+    pub fn parse_program(&mut self) -> Program {
         let mut program = Program::new();
 
         while !self.cur_token_is(&Token::EOF) {

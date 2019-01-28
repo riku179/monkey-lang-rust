@@ -1,8 +1,9 @@
-use crate::lexer::Lexer;
-use crate::token::Token;
 use ascii::AsciiString;
 use std::io;
 use std::str::FromStr;
+use crate::token::Token;
+use crate::lexer::Lexer;
+use crate::parser::Parser;
 
 const PROMPT: &str = ">> ";
 
@@ -12,21 +13,31 @@ where
     W: io::Write,
 {
     loop {
-        write!(writer, "{}", PROMPT).unwrap();
+        write!(writer, "{}", PROMPT)?;
         writer.flush()?;
         let mut line = String::new();
         reader.read_line(&mut line)?;
         if let Ok(ascii_line) = AsciiString::from_str(&line) {
             let mut lex = Lexer::new(ascii_line);
-            let mut tok;
-            while {
-                tok = lex.next_token();
-                tok != Token::EOF
-            } {
-                writeln!(writer, "{:?}", tok).unwrap();
+            let mut p = Parser::new(&mut lex);
+            let program = p.parse_program();
+
+            if p.errors.len() != 0 {
+                writer = print_parse_errors(writer, p.errors)?;
+                continue
             }
+
+            writeln!(writer, "{}", program)?
         } else {
             writeln!(writer, "[ERROR] please input only ASCII string").unwrap();
         }
     }
+}
+
+
+fn print_parse_errors<W: io::Write>(mut writer: W, errors: Vec<String>) -> io::Result<W> {
+    for err in errors {
+        write!(writer, "\t{}\n", err)?
+    }
+    Ok(writer)
 }
