@@ -43,6 +43,7 @@ pub enum Token {
     RETURN
 }
 
+#[cfg_attr(tarpaulin, skip)]
 impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {

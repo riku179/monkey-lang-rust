@@ -7,6 +7,7 @@ use crate::parser::Parser;
 
 const PROMPT: &str = ">> ";
 
+#[cfg_attr(tarpaulin, skip)]
 pub fn start<R, W>(mut reader: R, mut writer: W) -> io::Result<!>
 where
     R: io::BufRead,
