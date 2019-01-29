@@ -53,7 +53,7 @@ fn test_let_stmts() {
     ];
 
     for (input, expect_ident, expect_expr) in test_cases {
-        let mut lex = Lexer::new(AsciiString::from_ascii(input).unwrap());
+        let mut lex = Lexer::new(input.to_string()).unwrap();
         let mut p = Parser::new(&mut lex);
 
         let program = p.parse_program();
@@ -87,7 +87,7 @@ fn test_return_stmt() {
     ];
 
     for (input, expect_expr) in test_cases {
-        let mut lex = Lexer::new(AsciiString::from_ascii(input).unwrap());
+        let mut lex = Lexer::new(input.to_string()).unwrap();
         let mut psr = Parser::new(&mut lex);
 
         let program = psr.parse_program();
@@ -103,9 +103,9 @@ fn test_return_stmt() {
 
 #[test]
 fn test_ident_expr() {
-    let input = AsciiString::from_ascii(r#"foobar;"#).unwrap();
+    let input = r#"foobar;"#.to_string();
 
-    let mut lex = Lexer::new(input);
+    let mut lex = Lexer::new(input).unwrap();
     let mut p = Parser::new(&mut lex);
 
     let program = p.parse_program();
@@ -117,9 +117,9 @@ fn test_ident_expr() {
 
 #[test]
 fn test_integer_literal_expr() {
-    let input = AsciiString::from_ascii(r#"5;"#).unwrap();
+    let input = r#"5;"#.to_string();
 
-    let mut lex = Lexer::new(input);
+    let mut lex = Lexer::new(input).unwrap();
     let mut p = Parser::new(&mut lex);
 
     let program = p.parse_program();
@@ -137,7 +137,7 @@ fn test_boolean_literal_expr() {
     ];
 
     for (input, expect) in test_cases {
-        let mut lex = Lexer::new(AsciiString::from_ascii(input).unwrap());
+        let mut lex = Lexer::new(input.to_string()).unwrap();
         let mut p = Parser::new(&mut lex);
         let program = p.parse_program();
 
@@ -155,7 +155,7 @@ fn test_parse_prefix_expr() {
     ];
 
     for (input, expect_prefix, expect_val) in prefix_tests {
-        let mut l = Lexer::new(AsciiString::from_ascii(input).unwrap());
+        let mut l = Lexer::new(input.to_string()).unwrap();
         let mut p = Parser::new(&mut l);
         let program = p.parse_program();
         check_parser_errors(p);
@@ -186,7 +186,7 @@ fn test_parse_infix_expr() {
     ];
 
     for (input, expect_left, expect_infix, expect_right) in infix_tests {
-        let mut l = Lexer::new(AsciiString::from_ascii(input).unwrap());
+        let mut l = Lexer::new(input.to_string()).unwrap();
         let mut p = Parser::new(&mut l);
         let program = p.parse_program();
         check_parser_errors(p);
@@ -282,7 +282,7 @@ fn test_operator_precedence_parsing() {
     ];
 
     for (input, expect) in test_cases {
-        let mut l = Lexer::new(AsciiString::from_ascii(input).unwrap());
+        let mut l = Lexer::new(input.to_string()).unwrap();
         let mut p = Parser::new(&mut l);
         let program = p.parse_program();
         check_parser_errors(p);
@@ -293,9 +293,9 @@ fn test_operator_precedence_parsing() {
 
 #[test]
 fn test_if_expr() {
-    let input = r#"if (x < y) { x }"#;
+    let input = r#"if (x < y) { x }"#.to_string();
 
-    let mut l = Lexer::new(AsciiString::from_ascii(input).unwrap());
+    let mut l = Lexer::new(input).unwrap();
     let mut p = Parser::new(&mut l);
     let program = p.parse_program();
     check_parser_errors(p);
@@ -311,8 +311,8 @@ fn test_if_expr() {
 
 #[test]
 fn test_if_else_expr() {
-    let input = r#"if (x < y) { x } else { y }"#;
-    let mut l = Lexer::new(AsciiString::from_ascii(input).unwrap());
+    let input = r#"if (x < y) { x } else { y }"#.to_string();
+    let mut l = Lexer::new(input).unwrap();
     let mut p = Parser::new(&mut l);
     let program = p.parse_program();
     check_parser_errors(p);
@@ -329,8 +329,8 @@ fn test_if_else_expr() {
 
 #[test]
 fn test_function_literal_parse() {
-    let input = r#"fn (x, y) { x + y; }"#;
-    let mut l = Lexer::new(AsciiString::from_ascii(input).unwrap());
+    let input = r#"fn (x, y) { x + y; }"#.to_string();
+    let mut l = Lexer::new(input).unwrap();
     let mut p = Parser::new(&mut l);
     let program = p.parse_program();
     check_parser_errors(p);
@@ -366,7 +366,7 @@ fn test_function_param_parse() {
     ];
 
     for (input, expect) in test_cases {
-        let mut l = Lexer::new(AsciiString::from_ascii(input).unwrap());
+        let mut l = Lexer::new(input.to_string()).unwrap();
         let mut p = Parser::new(&mut l);
         let program = p.parse_program();
         check_parser_errors(p);
@@ -385,8 +385,8 @@ fn test_function_param_parse() {
 
 #[test]
 fn test_call_expr_parse() {
-    let input = "add(1, 2 * 3, 4 + 5)";
-    let mut l = Lexer::new(AsciiString::from_ascii(input).unwrap());
+    let input = "add(1, 2 * 3, 4 + 5)".to_string();
+    let mut l = Lexer::new(input).unwrap();
     let mut p = Parser::new(&mut l);
     let program = p.parse_program();
     check_parser_errors(p);
@@ -424,7 +424,7 @@ fn test_call_expr_param_parse() {
     ];
 
     for (input, expect_ident, expect_args) in test_cases {
-        let mut l = Lexer::new(AsciiString::from_ascii(input).unwrap());
+        let mut l = Lexer::new(input.to_string()).unwrap();
         let mut p = Parser::new(&mut l);
         let program = p.parse_program();
         check_parser_errors(p);

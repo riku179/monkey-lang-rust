@@ -1,5 +1,5 @@
 use crate::token::Token;
-use ascii::{AsciiChar, AsciiString};
+use ascii::{AsciiChar, AsciiString, FromAsciiError};
 
 #[cfg(test)]
 mod test;
@@ -13,15 +13,15 @@ pub struct Lexer {
 }
 
 impl Lexer {
-    pub fn new(input: AsciiString) -> Lexer {
+    pub fn new(input: String) -> Result<Lexer, FromAsciiError<String>> {
         let mut l = Lexer {
-            input,
+            input: AsciiString::from_ascii(input)?,
             position: 0,
             read_position: 0,
             ch: AsciiChar::Null,
         };
         l.read_char();
-        l
+        Ok(l)
     }
 
     fn read_char(&mut self) {

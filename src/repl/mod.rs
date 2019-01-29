@@ -18,8 +18,7 @@ where
         writer.flush()?;
         let mut line = String::new();
         reader.read_line(&mut line)?;
-        if let Ok(ascii_line) = AsciiString::from_str(&line) {
-            let mut lex = Lexer::new(ascii_line);
+        if let Ok(mut lex) = Lexer::new(line) {
             let mut p = Parser::new(&mut lex);
             let program = p.parse_program();
 

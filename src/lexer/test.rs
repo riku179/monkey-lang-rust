@@ -2,8 +2,7 @@ use super::*;
 
 #[test]
 fn test_next_token() {
-    let input = AsciiString::from_ascii(
-        r###"
+    let input = r###"
             let five = 5;
             let ten = 10;
 
@@ -24,9 +23,7 @@ fn test_next_token() {
             10 == 10;
             10 != 9;
             "###
-        .to_string(),
-    )
-    .unwrap();
+    .to_string();
 
     let expected = vec![
         Token::LET,
@@ -105,7 +102,7 @@ fn test_next_token() {
         Token::EOF,
     ];
 
-    let mut l = Lexer::new(input);
+    let mut l = Lexer::new(input).unwrap();
 
     for expected_token in expected {
         let tok = l.next_token();
