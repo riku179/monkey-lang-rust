@@ -7,6 +7,7 @@ fn test_eval(input: &str) -> Option<Object> {
     let mut l = Lexer::new(input.to_string()).unwrap();
     let mut p = Parser::new(&mut l);
     let program = p.parse_program();
+    println!("{:?}", program);
 
     return eval(program)
 }
@@ -31,7 +32,9 @@ fn test_bool_obj(obj: Object, expect: bool) {
 fn test_eval_int_expr() {
     let test_cases = vec![
         ("5", 5),
-        ("10", 10)
+        ("10", 10),
+        ("-5", -5),
+        ("-10", -10)
     ];
 
     for (input, expect) in test_cases {
@@ -45,6 +48,23 @@ fn test_eval_bool_expr() {
     let test_cases = vec![
         ("true", true),
         ("false", false)
+    ];
+
+    for (input, expect) in test_cases {
+        let evaluated = test_eval(input).unwrap();
+        test_bool_obj(evaluated, expect);
+    }
+}
+
+#[test]
+fn test_bang_operator() {
+    let test_cases = vec![
+        ("!true", false),
+        ("!false", true),
+        ("!5", false),
+        ("!!true", true),
+        ("!!false", false),
+        ("!!5", true)
     ];
 
     for (input, expect) in test_cases {
