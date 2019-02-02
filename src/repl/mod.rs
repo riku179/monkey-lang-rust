@@ -4,6 +4,7 @@ use std::str::FromStr;
 use crate::token::Token;
 use crate::lexer::Lexer;
 use crate::parser::Parser;
+use crate::evaluator::eval;
 
 const PROMPT: &str = ">> ";
 
@@ -27,7 +28,9 @@ where
                 continue
             }
 
-            writeln!(writer, "{}", program)?
+            if let Some(val) = eval(program) {
+                writeln!(writer, "{:?}", val)?
+            }
         } else {
             writeln!(writer, "[ERROR] please input only ASCII string").unwrap();
         }
