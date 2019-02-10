@@ -42,6 +42,28 @@ fn eval_prefix_expr(operator: Prefix, right: Object) -> Object {
     }
 }
 
+fn eval_infix_expr(operator: Infix, left: Object, right: Object) -> Object {
+    if let Object::Int(left_val) = left {
+        if let Object::Int(right_val) = right {
+            eval_int_infix_expr(operator, left_val, right_val)
+        } else {
+            unreachable!()
+        }
+    } else {
+        unreachable!()
+    }
+}
+
+fn eval_int_infix_expr(operator: Infix, left: i64, right: i64) -> Object {
+    match operator {
+        Infix::Plus => Object::Int(left + right),
+        Infix::Minus => Object::Int(left - right),
+        Infix::Multiply => Object::Int(left * right),
+        Infix::Divide => Object::Int(left / right),
+        _ => unreachable!()
+    }
+}
+
 fn eval_bang_operator_expr(right: Object) -> Object {
     match right {
         Object::Bool(val) => Object::Bool(!val),
