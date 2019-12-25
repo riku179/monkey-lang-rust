@@ -22,7 +22,12 @@ fn eval_stmt(stmt: Stmt) -> Option<Object> {
 fn eval_expr(expr: Expr) -> Option<Object> {
     match expr {
         Expr::Literal(literal) => Some(eval_literal(literal)),
-        Expr::Prefix(prefix, box right) => Some(eval_prefix_expr(prefix, eval_expr(right)?)),
+        Expr::Prefix(prefix, right) => Some(eval_prefix_expr(prefix, eval_expr(*right)?)),
+        Expr::Infix(left, infix, right) => Some(eval_infix_expr(
+            infix,
+            eval_expr(*left)?,
+            eval_expr(*right)?
+        )),
         _ => None
     }
 }

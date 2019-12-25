@@ -1,4 +1,5 @@
 {
     "editor.wordBasedSuggestions": false,
-    "editor.suggestSelection": "recentlyUsedByPrefix"
+    "editor.suggestSelection": "recentlyUsedByPrefix",
+    "editor.fontFamily": "'Source Han Code JP'"
 }
