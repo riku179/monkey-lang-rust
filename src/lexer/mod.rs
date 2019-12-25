@@ -25,7 +25,7 @@ impl Lexer {
     }
 
     fn read_char(&mut self) {
-        if let Some(&ch) = self.input.chars().nth(self.read_position) {
+        if let Some(ch) = self.input.chars().nth(self.read_position) {
             self.ch = ch
         } else {
             self.ch = AsciiChar::Null
@@ -88,7 +88,7 @@ impl Lexer {
                         "return" => Token::RETURN,
                         _ => Token::IDENT(ident)
                     }
-                } else if self.ch.is_digit() {
+                } else if self.ch.is_ascii_digit() {
                     return Token::INT(self.read_number());
                 };
                 tok = Token::EOF
@@ -109,7 +109,7 @@ impl Lexer {
 
     fn read_number(&mut self) -> i64 {
         let mut literal = AsciiString::new();
-        while self.ch.is_digit() {
+        while self.ch.is_ascii_digit() {
             literal.push(self.ch);
             self.read_char();
         }
@@ -117,7 +117,7 @@ impl Lexer {
     }
 
     fn skip_whitespace(&mut self) {
-        while self.ch.is_blank() || self.ch.is_whitespace() {
+        while self.ch.is_ascii_blank() || self.ch.is_whitespace() {
             self.read_char()
         }
     }
@@ -127,7 +127,7 @@ impl Lexer {
     }
 
     fn peek_char(&mut self) -> AsciiChar {
-        if let Some(&ch) = self.input.chars().nth(self.read_position) {
+        if let Some(ch) = self.input.chars().nth(self.read_position) {
             ch
         } else {
             AsciiChar::Null

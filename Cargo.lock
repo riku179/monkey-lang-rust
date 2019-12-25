@@ -2,15 +2,15 @@
 # It is not intended for manual editing.
 [[package]]
 name = "ascii"
-version = "0.9.1"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "monkey_lang"
 version = "0.1.0"
 dependencies = [
- "ascii 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ascii 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [metadata]
-"checksum ascii 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)" = "a5fc969a8ce2c9c0c4b0429bb8431544f6658283c8326ba5ff8c762b75369335"
+"checksum ascii 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "bbf56136a5198c7b01a49e3afcbef6cf84597273d298f54432926024107b0109"

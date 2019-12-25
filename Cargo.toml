@@ -5,4 +5,4 @@ authors = ["Riku Inoue <riku.inoue@shiroyagi.co.jp>"]
 edition = "2018"
 
 [dependencies]
-ascii = "0.9"
+ascii = "1.0"
