@@ -56,7 +56,27 @@ fn test_eval_int_expr() {
 
 #[test]
 fn test_eval_bool_expr() {
-    let test_cases = vec![("true", true), ("false", false)];
+    let test_cases = vec![
+        ("true", true),
+        ("false", false),
+        ("1 < 2", true),
+        ("1 > 2", false),
+        ("1 < 1", false),
+        ("1 > 1", false),
+        ("1 == 1", true),
+        ("1 != 1", false),
+        ("1 == 2", false),
+        ("1 != 2", true),
+        ("true == true", true),
+        ("false == false", true),
+        ("true == false", false),
+        ("true != false", true),
+        ("false != true", true),
+        ("(1 < 2) == true", true),
+        ("(1 < 2) == false", false),
+        ("(1 > 2) == true", false),
+        ("(1 > 2) == false", true),
+    ];
 
     for (input, expect) in test_cases {
         let evaluated = test_eval(input).unwrap();

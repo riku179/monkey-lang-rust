@@ -55,7 +55,11 @@ fn eval_infix_expr(operator: Infix, left: Object, right: Object) -> Object {
             unreachable!()
         }
     } else {
-        unreachable!()
+        match operator {
+            Infix::Equal => Object::Bool(left == right),
+            Infix::NotEqual => Object::Bool(left != right),
+            _ => unreachable!(),
+        }
     }
 }
 
@@ -65,6 +69,10 @@ fn eval_int_infix_expr(operator: Infix, left: i64, right: i64) -> Object {
         Infix::Minus => Object::Int(left - right),
         Infix::Multiply => Object::Int(left * right),
         Infix::Divide => Object::Int(left / right),
+        Infix::LessThan => Object::Bool(left < right),
+        Infix::GreaterThan => Object::Bool(left > right),
+        Infix::Equal => Object::Bool(left == right),
+        Infix::NotEqual => Object::Bool(left != right),
         _ => unreachable!(),
     }
 }
