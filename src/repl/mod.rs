@@ -29,7 +29,7 @@ where
             }
 
             if let Some(val) = eval(program) {
-                writeln!(writer, "{:?}", val)?
+                writeln!(writer, "{}", val)?
             }
         } else {
             writeln!(writer, "[ERROR] please input only ASCII string").unwrap();
