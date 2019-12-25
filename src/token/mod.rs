@@ -40,7 +40,7 @@ pub enum Token {
     FALSE,
     IF,
     ELSE,
-    RETURN
+    RETURN,
 }
 
 #[cfg_attr(tarpaulin, skip)]

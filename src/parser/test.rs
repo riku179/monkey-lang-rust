@@ -1,10 +1,9 @@
-use ascii::AsciiString;
-use super::*;
-use super::test_util::Literable;
 use super::test_util as util;
-use crate::ast::{Expr, Ident, Literal, Prefix, Infix, Stmt};
+use super::test_util::Literable;
+use super::*;
+use crate::ast::{Expr, Ident, Infix, Literal, Prefix, Stmt};
 use crate::lexer::Lexer;
-
+use ascii::AsciiString;
 
 fn check_parser_errors(p: Parser) {
     let errors = p.errors;
@@ -35,21 +34,13 @@ fn check_stmt_len(program: &Program, len: usize) {
 #[test]
 fn test_let_stmts() {
     let test_cases = vec![
-        (
-            "let x = 5;",
-            "x",
-            Expr::Literal(Literal::Int(5))
-        ),
-        (
-            "let y = true;",
-            "y",
-            Expr::Literal(Literal::Bool(true))
-        ),
+        ("let x = 5;", "x", Expr::Literal(Literal::Int(5))),
+        ("let y = true;", "y", Expr::Literal(Literal::Bool(true))),
         (
             "let foobar = y;",
             "foobar",
-            Expr::Ident(Ident("y".to_string()))
-        )
+            Expr::Ident(Ident("y".to_string())),
+        ),
     ];
 
     for (input, expect_ident, expect_expr) in test_cases {
@@ -72,18 +63,9 @@ fn test_let_stmts() {
 #[test]
 fn test_return_stmt() {
     let test_cases = vec![
-        (
-            "return 5;",
-            Expr::Literal(Literal::Int(5))
-        ),
-        (
-            "return true;",
-            Expr::Literal(Literal::Bool(true))
-        ),
-        (
-            "return foobar;",
-            Expr::Ident(Ident("foobar".to_string()))
-        )
+        ("return 5;", Expr::Literal(Literal::Int(5))),
+        ("return true;", Expr::Literal(Literal::Bool(true))),
+        ("return foobar;", Expr::Ident(Ident("foobar".to_string()))),
     ];
 
     for (input, expect_expr) in test_cases {
@@ -98,7 +80,6 @@ fn test_return_stmt() {
             assert_eq!(*expr, expect_expr);
         }
     }
-
 }
 
 #[test]
@@ -131,10 +112,7 @@ fn test_integer_literal_expr() {
 
 #[test]
 fn test_boolean_literal_expr() {
-    let test_cases = vec![
-        ("true;", true),
-        ("false;", false)
-    ];
+    let test_cases = vec![("true;", true), ("false;", false)];
 
     for (input, expect) in test_cases {
         let mut lex = Lexer::new(input.to_string()).unwrap();
@@ -149,10 +127,7 @@ fn test_boolean_literal_expr() {
 
 #[test]
 fn test_parse_prefix_expr() {
-    let prefix_tests = vec![
-            ("!5;", Prefix::Not, 5),
-            ( "-15;", Prefix::Minus, 15),
-    ];
+    let prefix_tests = vec![("!5;", Prefix::Not, 5), ("-15;", Prefix::Minus, 15)];
 
     for (input, expect_prefix, expect_val) in prefix_tests {
         let mut l = Lexer::new(input.to_string()).unwrap();
@@ -175,14 +150,14 @@ fn test_parse_prefix_expr() {
 #[test]
 fn test_parse_infix_expr() {
     let infix_tests = vec![
-        ( "5 + 5;", 5, Infix::Plus, 5),
-        ( "5 - 5", 5, Infix::Minus, 5),
-        ( "5 * 5", 5, Infix::Multiply, 5),
-        ( "5 / 5", 5, Infix::Divide, 5),
-        ( "5 > 5", 5, Infix::GreaterThan, 5),
-        ( "5 < 5", 5, Infix::LessThan, 5),
-        ( "5 == 5", 5, Infix::Equal, 5),
-        ( "5 != 5", 5, Infix::NotEqual, 5),
+        ("5 + 5;", 5, Infix::Plus, 5),
+        ("5 - 5", 5, Infix::Minus, 5),
+        ("5 * 5", 5, Infix::Multiply, 5),
+        ("5 / 5", 5, Infix::Divide, 5),
+        ("5 > 5", 5, Infix::GreaterThan, 5),
+        ("5 < 5", 5, Infix::LessThan, 5),
+        ("5 == 5", 5, Infix::Equal, 5),
+        ("5 != 5", 5, Infix::NotEqual, 5),
     ];
 
     for (input, expect_left, expect_infix, expect_right) in infix_tests {
@@ -192,93 +167,47 @@ fn test_parse_infix_expr() {
         check_parser_errors(p);
         check_stmt_len(&program, 1);
 
-        util::check_infix_stmt(&program.statements[0], expect_left, expect_infix, expect_right)
+        util::check_infix_stmt(
+            &program.statements[0],
+            expect_left,
+            expect_infix,
+            expect_right,
+        )
     }
 }
 
 #[test]
 fn test_operator_precedence_parsing() {
     let test_cases = vec![
-        (
-            "-a * b",
-            "((-a) * b)",
-        ),
-        (
-            "!-a",
-            "(!(-a))"
-        ),
-        (
-            "a + b + c",
-            "((a + b) + c)"
-        ),
-        (
-            "a + b - c",
-            "((a + b) - c)"
-        ),
-        (
-            "a * b * c",
-            "((a * b) * c)"
-        ),
-        (
-            "a * b / c",
-            "((a * b) / c)"
-        ),
-        (
-            "a + b / c",
-            "(a + (b / c))"
-        ),
-        (
-            "a + b * c + d / e - f",
-            "(((a + (b * c)) + (d / e)) - f)"
-        ),
-        (
-            "3 + 4; -5 * 5",
-            "(3 + 4)((-5) * 5)"
-        ),
-        (
-            "5 > 4 == 3 < 4",
-            "((5 > 4) == (3 < 4))"
-        ),
-        (
-            "5 < 4 != 3 > 4",
-            "((5 < 4) != (3 > 4))"
-        ),
+        ("-a * b", "((-a) * b)"),
+        ("!-a", "(!(-a))"),
+        ("a + b + c", "((a + b) + c)"),
+        ("a + b - c", "((a + b) - c)"),
+        ("a * b * c", "((a * b) * c)"),
+        ("a * b / c", "((a * b) / c)"),
+        ("a + b / c", "(a + (b / c))"),
+        ("a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f)"),
+        ("3 + 4; -5 * 5", "(3 + 4)((-5) * 5)"),
+        ("5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"),
+        ("5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"),
         (
             "3 + 4 * 5 == 3 * 1 + 4 * 5",
-            "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"
+            "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
         ),
-        (
-            "1 + (2 + 3) + 4",
-            "((1 + (2 + 3)) + 4)"
-        ),
-        (
-            "(5 + 5) * 2",
-            "((5 + 5) * 2)"
-        ),
-        (
-            "2 / (5 + 5)",
-            "(2 / (5 + 5))"
-        ),
-        (
-            "-(5 + 5)",
-            "(-(5 + 5))"
-        ),
-        (
-            "!(true == true)",
-            "(!(true == true))"
-        ),
-        (
-            "a + add(b * c) + d",
-            "((a + add((b * c))) + d)"
-        ),
+        ("1 + (2 + 3) + 4", "((1 + (2 + 3)) + 4)"),
+        ("(5 + 5) * 2", "((5 + 5) * 2)"),
+        ("2 / (5 + 5)", "(2 / (5 + 5))"),
+        ("-(5 + 5)", "(-(5 + 5))"),
+        ("!(true == true)", "(!(true == true))"),
+        ("a + add(b * c) + d", "((a + add((b * c))) + d)"),
         (
             "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
-            "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))"
+            "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))",
         ),
         (
             "add(a + b + c * d / f + g)",
-            "add((((a + b) + ((c * d) / f)) + g))"
-        )
+            "add((((a + b) + ((c * d) / f)) + g))",
+        ),
     ];
 
     for (input, expect) in test_cases {
@@ -301,7 +230,9 @@ fn test_if_expr() {
     check_parser_errors(p);
     check_stmt_len(&program, 1);
 
-    if let Stmt::Expr(Expr::If(box cond, box Stmt::Block(cons_stmts), None)) = &program.statements[0] {
+    if let Stmt::Expr(Expr::If(box cond, box Stmt::Block(cons_stmts), None)) =
+        &program.statements[0]
+    {
         util::check_infix_expr(cond, "x", Infix::LessThan, "y");
         util::check_stmt(&cons_stmts[0], "x");
     } else {
@@ -318,7 +249,12 @@ fn test_if_else_expr() {
     check_parser_errors(p);
     check_stmt_len(&program, 1);
 
-    if let Stmt::Expr(Expr::If(box cond, box Stmt::Block(cons_stmts), Some(box Stmt::Block(alter_stmts)))) = &program.statements[0] {
+    if let Stmt::Expr(Expr::If(
+        box cond,
+        box Stmt::Block(cons_stmts),
+        Some(box Stmt::Block(alter_stmts)),
+    )) = &program.statements[0]
+    {
         util::check_infix_expr(cond, "x", Infix::LessThan, "y");
         util::check_stmt(&cons_stmts[0], "x");
         util::check_stmt(&alter_stmts[0], "y")
@@ -351,18 +287,9 @@ fn test_function_literal_parse() {
 #[test]
 fn test_function_param_parse() {
     let test_cases = vec![
-        (
-            "fn() {};",
-            vec![]
-        ),
-        (
-            "fn(x) {};",
-            vec!["x"]
-        ),
-        (
-            "fn(x, y, z) {};",
-            vec!["x", "y", "z"]
-        )
+        ("fn() {};", vec![]),
+        ("fn(x) {};", vec!["x"]),
+        ("fn(x, y, z) {};", vec!["x", "y", "z"]),
     ];
 
     for (input, expect) in test_cases {
@@ -406,21 +333,13 @@ fn test_call_expr_parse() {
 #[test]
 fn test_call_expr_param_parse() {
     let test_cases = vec![
-        (
-            "add();",
-            "add",
-            vec![]
-        ),
-        (
-            "add(1);",
-            "add",
-            vec!["1"]
-        ),
+        ("add();", "add", vec![]),
+        ("add(1);", "add", vec!["1"]),
         (
             "add(1, 2 * 3, 4 + 5);",
             "add",
-            vec!["1", "(2 * 3)", "(4 + 5)"]
-        )
+            vec!["1", "(2 * 3)", "(4 + 5)"],
+        ),
     ];
 
     for (input, expect_ident, expect_args) in test_cases {

@@ -86,8 +86,8 @@ impl Lexer {
                         "if" => Token::IF,
                         "else" => Token::ELSE,
                         "return" => Token::RETURN,
-                        _ => Token::IDENT(ident)
-                    }
+                        _ => Token::IDENT(ident),
+                    };
                 } else if self.ch.is_ascii_digit() {
                     return Token::INT(self.read_number());
                 };

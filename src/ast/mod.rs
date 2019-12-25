@@ -1,5 +1,5 @@
-use std::fmt;
 use crate::token::Token;
+use std::fmt;
 
 #[derive(Debug)]
 pub struct Program {
@@ -7,7 +7,7 @@ pub struct Program {
 }
 
 impl fmt::Display for Program {
-    fn fmt (&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut s = String::new();
         for stmt in &self.statements {
             s.push_str(&format!("{}", stmt))
@@ -28,7 +28,7 @@ impl Program {
 pub struct Ident(pub String);
 
 impl fmt::Display for Ident {
-    fn fmt (&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.0)
     }
 }
@@ -42,7 +42,7 @@ pub enum Stmt {
 }
 
 impl fmt::Display for Stmt {
-    fn fmt (&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Stmt::Let(ident, expr) => write!(f, "let {} = {}", ident, expr),
             Stmt::Return(expr) => write!(f, "return {}", expr),
@@ -51,7 +51,7 @@ impl fmt::Display for Stmt {
                 let mut ret = Ok(());
                 for stmt in stmts {
                     ret = write!(f, "{}", stmt);
-                };
+                }
                 ret
             }
         }
@@ -66,7 +66,7 @@ pub enum Expr {
     Infix(Box<Expr>, Infix, Box<Expr>),
     If(Box<Expr>, Box<Stmt>, Option<Box<Stmt>>),
     Function(Vec<Ident>, Box<Stmt>),
-    Call(Box<Expr>, Vec<Expr>)
+    Call(Box<Expr>, Vec<Expr>),
 }
 
 impl fmt::Display for Expr {
@@ -82,13 +82,15 @@ impl fmt::Display for Expr {
                 } else {
                     write!(f, "if {} {}", cond, cons)
                 }
-            },
+            }
             Expr::Function(params, body) => {
-                let params_string: Vec<String> = params.iter().map(|param| param.0.clone()).collect();
+                let params_string: Vec<String> =
+                    params.iter().map(|param| param.0.clone()).collect();
                 write!(f, "fn ({}) {}", params_string.join(", "), body)
-            },
+            }
             Expr::Call(box func, params) => {
-                let params_string: Vec<String> = params.iter().map(|param| format!("{}", param)).collect();
+                let params_string: Vec<String> =
+                    params.iter().map(|param| format!("{}", param)).collect();
                 write!(f, "{}({})", func, params_string.join(", "))
             }
         }
@@ -123,7 +125,7 @@ impl Prefix {
             Token::PLUS => Ok(Prefix::Plus),
             Token::MINUS => Ok(Prefix::Minus),
             Token::BANG => Ok(Prefix::Not),
-            _ => Err(format!("this is not prefix token. got {:?}", tok))
+            _ => Err(format!("this is not prefix token. got {:?}", tok)),
         }
     }
 }
@@ -161,7 +163,7 @@ impl Infix {
             Token::NOTEQ => Ok(Infix::NotEqual),
             Token::GT => Ok(Infix::GreaterThan),
             Token::LT => Ok(Infix::LessThan),
-            _ => Err(format!("this is not prefix token. got {:?}", tok))
+            _ => Err(format!("this is not prefix token. got {:?}", tok)),
         }
     }
 }

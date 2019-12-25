@@ -1,6 +1,6 @@
 use super::*;
-use crate::object::Object;
 use crate::lexer::Lexer;
+use crate::object::Object;
 use crate::parser::Parser;
 
 fn test_eval(input: &str) -> Option<Object> {
@@ -9,7 +9,7 @@ fn test_eval(input: &str) -> Option<Object> {
     let program = p.parse_program();
     println!("{:?}", program);
 
-    return eval(program)
+    return eval(program);
 }
 
 fn test_int_obj(obj: Object, expect: i64) {
@@ -56,10 +56,7 @@ fn test_eval_int_expr() {
 
 #[test]
 fn test_eval_bool_expr() {
-    let test_cases = vec![
-        ("true", true),
-        ("false", false)
-    ];
+    let test_cases = vec![("true", true), ("false", false)];
 
     for (input, expect) in test_cases {
         let evaluated = test_eval(input).unwrap();
@@ -75,7 +72,7 @@ fn test_bang_operator() {
         ("!5", false),
         ("!!true", true),
         ("!!false", false),
-        ("!!5", true)
+        ("!!5", true),
     ];
 
     for (input, expect) in test_cases {

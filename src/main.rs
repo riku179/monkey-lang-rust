@@ -1,12 +1,12 @@
 #![feature(never_type)]
 #![feature(box_patterns)]
 mod ast;
+mod evaluator;
 mod lexer;
+mod object;
 mod parser;
 mod repl;
 mod token;
-mod object;
-mod evaluator;
 
 use std::io;
 

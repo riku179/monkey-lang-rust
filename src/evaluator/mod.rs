@@ -1,6 +1,6 @@
-use std::fmt::{Debug, Display};
-use crate::ast::{Program, Ident, Stmt, Expr, Literal, Prefix, Infix};
+use crate::ast::{Expr, Ident, Infix, Literal, Prefix, Program, Stmt};
 use crate::object::Object;
+use std::fmt::{Debug, Display};
 
 mod test;
 
@@ -15,7 +15,7 @@ pub fn eval(p: Program) -> Option<Object> {
 fn eval_stmt(stmt: Stmt) -> Option<Object> {
     match stmt {
         Stmt::Expr(expr) => eval_expr(expr),
-        _ => None
+        _ => None,
     }
 }
 
@@ -26,16 +26,16 @@ fn eval_expr(expr: Expr) -> Option<Object> {
         Expr::Infix(left, infix, right) => Some(eval_infix_expr(
             infix,
             eval_expr(*left)?,
-            eval_expr(*right)?
+            eval_expr(*right)?,
         )),
-        _ => None
+        _ => None,
     }
 }
 
 fn eval_literal(literal: Literal) -> Object {
     match literal {
         Literal::Bool(v) => Object::Bool(v),
-        Literal::Int(v) => Object::Int(v)
+        Literal::Int(v) => Object::Int(v),
     }
 }
 
@@ -43,7 +43,7 @@ fn eval_prefix_expr(operator: Prefix, right: Object) -> Object {
     match operator {
         Prefix::Not => eval_bang_operator_expr(right),
         Prefix::Minus => eval_minus_operator_expr(right),
-        _ => Object::Null
+        _ => Object::Null,
     }
 }
 
@@ -65,7 +65,7 @@ fn eval_int_infix_expr(operator: Infix, left: i64, right: i64) -> Object {
         Infix::Minus => Object::Int(left - right),
         Infix::Multiply => Object::Int(left * right),
         Infix::Divide => Object::Int(left / right),
-        _ => unreachable!()
+        _ => unreachable!(),
     }
 }
 
@@ -73,7 +73,7 @@ fn eval_bang_operator_expr(right: Object) -> Object {
     match right {
         Object::Bool(val) => Object::Bool(!val),
         Object::Null => Object::Bool(true),
-        _ => Object::Bool(false)
+        _ => Object::Bool(false),
     }
 }
 

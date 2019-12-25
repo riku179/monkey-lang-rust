@@ -1,4 +1,4 @@
-use crate::ast::{Expr, Ident, Literal, Program, Stmt, Prefix, Infix};
+use crate::ast::{Expr, Ident, Infix, Literal, Prefix, Program, Stmt};
 use crate::lexer::Lexer;
 use crate::token::Token;
 
@@ -71,7 +71,7 @@ impl<'a> Parser<'a> {
             self.next_token();
 
             if !self.expect_peek(&Token::ASSIGN) {
-                return None
+                return None;
             }
 
             self.next_token();
@@ -112,13 +112,11 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_expression(&mut self, priority: Priority) -> Option<Expr> {
-
         // prefix
         let mut left = match self.cur_token {
             Token::IDENT(_) => self.parse_identifier(),
             Token::INT(_) => self.parse_integer_literal(),
-            Token::TRUE
-            | Token::FALSE => self.parse_bool_literal(),
+            Token::TRUE | Token::FALSE => self.parse_bool_literal(),
             Token::PLUS => self.parse_prefix_expr(),
             Token::MINUS => self.parse_prefix_expr(),
             Token::BANG => self.parse_prefix_expr(),
@@ -126,11 +124,14 @@ impl<'a> Parser<'a> {
             Token::IF => self.parse_if_expr(),
             Token::FUNCTION => self.parse_function_literal(),
             _ => {
-                self.errors.push(format!("unknown token in expression. got {:?}", self.cur_token));
+                self.errors.push(format!(
+                    "unknown token in expression. got {:?}",
+                    self.cur_token
+                ));
                 None
             }
         }?;
-        
+
         // not end of a statement and next token has more priority than current token
         while !self.peek_token_is(&Token::SEMICOLON) && priority < self.peek_priority() {
             left = match self.peek_token {
@@ -149,7 +150,7 @@ impl<'a> Parser<'a> {
                     self.next_token();
                     self.parse_call_expr(left)?
                 }
-                _ => return Some(left)
+                _ => return Some(left),
             };
         }
         Some(left)
@@ -175,12 +176,12 @@ impl<'a> Parser<'a> {
         match self.cur_token {
             Token::TRUE => Some(Expr::Literal(Literal::Bool(true))),
             Token::FALSE => Some(Expr::Literal(Literal::Bool(false))),
-            _ => None
+            _ => None,
         }
     }
 
     fn parse_prefix_expr(&mut self) -> Option<Expr> {
-        let cur_token = self.cur_token.clone();// PLUS
+        let cur_token = self.cur_token.clone(); // PLUS
 
         self.next_token();
 
@@ -195,7 +196,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_infix_expr(&mut self, left: Expr) -> Option<Expr> {
-        let cur_token = self.cur_token.clone();// PLUS
+        let cur_token = self.cur_token.clone(); // PLUS
         let priority = self.cur_priority(); // SUM
         self.next_token();
 
@@ -205,7 +206,7 @@ impl<'a> Parser<'a> {
             Err(err) => {
                 self.errors.push(err);
                 None
-            },
+            }
         }
     }
 
@@ -223,7 +224,7 @@ impl<'a> Parser<'a> {
 
     fn parse_if_expr(&mut self) -> Option<Expr> {
         if !self.expect_peek(&Token::LPAREN) {
-            return None
+            return None;
         }
 
         self.next_token();
@@ -231,11 +232,11 @@ impl<'a> Parser<'a> {
         let cond = self.parse_expression(Priority::LOWEST)?;
 
         if !self.expect_peek(&Token::RPAREN) {
-            return None
+            return None;
         }
 
         if !self.expect_peek(&Token::LBRACE) {
-            return None
+            return None;
         }
 
         let cons = self.parse_block_stmt();
@@ -246,7 +247,7 @@ impl<'a> Parser<'a> {
             self.next_token();
 
             if !self.expect_peek(&Token::LBRACE) {
-                return None
+                return None;
             }
             alter = Some(Box::new(self.parse_block_stmt()));
         }
@@ -270,7 +271,7 @@ impl<'a> Parser<'a> {
 
     fn parse_function_literal(&mut self) -> Option<Expr> {
         if !self.expect_peek(&Token::LPAREN) {
-            return None
+            return None;
         }
         let params = self.parse_function_params();
 
@@ -286,14 +287,14 @@ impl<'a> Parser<'a> {
 
         if self.peek_token_is(&Token::RPAREN) {
             self.next_token();
-            return idents
+            return idents;
         }
 
         self.next_token();
 
         let ident = Ident(format!("{}", self.cur_token));
         idents.push(ident);
-        
+
         while self.peek_token_is(&Token::COMMA) {
             self.next_token(); // skip comma
             self.next_token();
@@ -302,10 +303,10 @@ impl<'a> Parser<'a> {
         }
 
         if !self.expect_peek(&Token::RPAREN) {
-            return vec![]
+            return vec![];
         }
 
-        return idents
+        return idents;
     }
 
     fn parse_call_expr(&mut self, func: Expr) -> Option<Expr> {
@@ -317,7 +318,7 @@ impl<'a> Parser<'a> {
 
         if self.peek_token_is(&Token::RPAREN) {
             self.next_token();
-            return args
+            return args;
         }
 
         self.next_token();
@@ -330,7 +331,7 @@ impl<'a> Parser<'a> {
         }
 
         if !self.expect_peek(&Token::RPAREN) {
-            return vec![]
+            return vec![];
         }
 
         args

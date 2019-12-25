@@ -38,7 +38,12 @@ pub fn check_stmt<T: Literable>(stmt: &Stmt, val: T) {
     val.check_stmt(stmt)
 }
 
-pub fn check_infix_expr<T: Literable>(expr: &Expr, expected_left: T, expected_infix: Infix, expected_right: T) {
+pub fn check_infix_expr<T: Literable>(
+    expr: &Expr,
+    expected_left: T,
+    expected_infix: Infix,
+    expected_right: T,
+) {
     if let Expr::Infix(box left, infix, box right) = expr {
         expected_left.check_expr(left);
         assert_eq!(expected_infix, *infix);
@@ -48,7 +53,12 @@ pub fn check_infix_expr<T: Literable>(expr: &Expr, expected_left: T, expected_in
     }
 }
 
-pub fn check_infix_stmt<T: Literable>(stmt: &Stmt, expect_left: T, expect_infix: Infix, expect_right: T) {
+pub fn check_infix_stmt<T: Literable>(
+    stmt: &Stmt,
+    expect_left: T,
+    expect_infix: Infix,
+    expect_right: T,
+) {
     if let Stmt::Expr(expr) = stmt {
         check_infix_expr(expr, expect_left, expect_infix, expect_right)
     } else {
