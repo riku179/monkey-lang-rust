@@ -8,14 +8,14 @@ jobs:
     machine: true
     steps:
       - checkout
-      - run:
-          name: Coverage with docker
-          command: docker run --security-opt seccomp=unconfined -v "${PWD}:/volume" xd009642/tarpaulin cargo tarpaulin --ignore-tests --out Xml
-
       - restore_cache:
           keys:
               - cargo-{{ checksum "Cargo.lock" }}
               - cargo-
+
+      - run:
+          name: Coverage with docker
+          command: docker run --security-opt seccomp=unconfined -v "${PWD}:/volume" xd009642/tarpaulin cargo tarpaulin --ignore-tests --out Xml
 
       - save_cache:
           key: cargo-{{ checksum "Cargo.lock" }}
