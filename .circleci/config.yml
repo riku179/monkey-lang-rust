@@ -10,7 +10,7 @@ jobs:
       - checkout
       - run:
           name: Coverage with docker
-          command: docker run --security-opt seccomp=unconfined -v "${PWD}:/volume" xd009642/tarpaulin --ignore-tests --out Xml
+          command: docker run --security-opt seccomp=unconfined -v "${PWD}:/volume" xd009642/tarpaulin cargo tarpaulin --ignore-tests --out Xml
 
       - restore_cache:
           keys:
