@@ -1,4 +1,4 @@
-use crate::ast::{Expr, Ident, Infix, Literal, Prefix, Program, Stmt};
+use crate::ast::{Expr, Infix, Literal, Prefix, Program, Stmt};
 use crate::object::Object;
 
 mod test;

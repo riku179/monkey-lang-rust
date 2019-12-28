@@ -1,10 +1,7 @@
 use crate::evaluator::eval;
 use crate::lexer::Lexer;
 use crate::parser::Parser;
-use crate::token::Token;
-use ascii::AsciiString;
 use std::io;
-use std::str::FromStr;
 
 const PROMPT: &str = ">> ";
 
@@ -23,7 +20,7 @@ where
             let mut p = Parser::new(&mut lex);
             let program = p.parse_program();
 
-            if p.errors.len() != 0 {
+            if !p.errors.is_empty() {
                 writer = print_parse_errors(writer, p.errors)?;
                 continue;
             }
@@ -39,7 +36,7 @@ where
 
 fn print_parse_errors<W: io::Write>(mut writer: W, errors: Vec<String>) -> io::Result<W> {
     for err in errors {
-        write!(writer, "\t{}\n", err)?
+        writeln!(writer, "\t{}", err)?
     }
     Ok(writer)
 }

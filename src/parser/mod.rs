@@ -241,16 +241,16 @@ impl<'a> Parser<'a> {
 
         let cons = self.parse_block_stmt();
 
-        let mut alter = None;
-
-        if self.peek_token_is(&Token::ELSE) {
+        let alter = if self.peek_token_is(&Token::ELSE) {
             self.next_token();
 
             if !self.expect_peek(&Token::LBRACE) {
                 return None;
             }
-            alter = Some(Box::new(self.parse_block_stmt()));
-        }
+            Some(Box::new(self.parse_block_stmt()))
+        } else {
+            None
+        };
 
         Some(Expr::If(Box::new(cond), Box::new(cons), alter))
     }
@@ -306,7 +306,7 @@ impl<'a> Parser<'a> {
             return vec![];
         }
 
-        return idents;
+        idents
     }
 
     fn parse_call_expr(&mut self, func: Expr) -> Option<Expr> {

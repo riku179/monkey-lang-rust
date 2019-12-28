@@ -1,9 +1,7 @@
 use super::test_util as util;
-use super::test_util::Literable;
 use super::*;
 use crate::ast::{Expr, Ident, Infix, Literal, Prefix, Stmt};
 use crate::lexer::Lexer;
-use ascii::AsciiString;
 
 fn check_parser_errors(p: Parser) {
     let errors = p.errors;

@@ -9,7 +9,7 @@ fn test_eval(input: &str) -> Option<Object> {
     let program = p.parse_program();
     println!("{:?}", program);
 
-    return eval(program);
+    eval(program)
 }
 
 #[test]
@@ -99,10 +99,9 @@ fn test_if_else_expr() {
 
     for (input, expect) in test_cases {
         let evaluated = test_eval(input);
-        if let Some(v) = expect {
-            assert_eq!(evaluated, Some(Object::Int(v)))
-        } else {
-            assert_eq!(evaluated, None)
+        match expect {
+            Some(v) => assert_eq!(evaluated, Some(Object::Int(v))),
+            _ => assert_eq!(evaluated, None),
         }
     }
 }
@@ -132,4 +131,29 @@ fn test_return_stmt() {
         let evaluated = test_eval(input);
         assert_eq!(evaluated, Some(Object::Int(expect)))
     }
+}
+
+#[test]
+fn test_error_handling() {
+    let test_cases = vec![
+        ("5 + true;", "type mismatch: INT + BOOLEAN"),
+        ("5 + true; 5;", "type mismatch: INT + BOOLEAN"),
+        ("-true", "unknown operator: -BOOLEAN"),
+        ("5; true + false;", "unknown operator BOOLEAN + BOOLEAN"),
+        (
+            "if (10 > 1) { true + false; }",
+            "unknown operator BOOLEAN + BOOLEAN",
+        ),
+        (
+            r###"
+        if (10 > 1) {
+            if (10 > 1) {
+                return true + false;
+            }
+            return 1;
+        }
+        "###,
+            "unknown operator BOOLEAN + BOOLEAN",
+        ),
+    ];
 }
