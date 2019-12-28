@@ -115,6 +115,17 @@ fn test_return_stmt() {
         ("return 2 * 5; 9;", 10),
         ("return 10;", 10),
         ("9; return 2 * 5; 9;;", 10),
+        (
+            r###"
+        if (10 > 1) {
+            if (10 > 1) {
+                return 10;
+            }
+            return 1;
+        }
+        "###,
+            10,
+        ),
     ];
 
     for (input, expect) in test_cases {
