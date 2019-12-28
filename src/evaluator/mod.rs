@@ -7,7 +7,7 @@ mod test;
 pub fn eval(p: Program) -> Option<Object> {
     let mut result = None;
     for stmt in p.statements {
-        result = eval_stmt(stmt);
+        result = eval_stmt(stmt)
     }
     result
 }
@@ -15,6 +15,13 @@ pub fn eval(p: Program) -> Option<Object> {
 fn eval_stmt(stmt: Stmt) -> Option<Object> {
     match stmt {
         Stmt::Expr(expr) => eval_expr(expr),
+        Stmt::Block(stmts) => {
+            let mut result = None;
+            for stmt in stmts {
+                result = eval_stmt(stmt)
+            }
+            result
+        }
         _ => None,
     }
 }
@@ -28,6 +35,7 @@ fn eval_expr(expr: Expr) -> Option<Object> {
             eval_expr(*left)?,
             eval_expr(*right)?,
         )),
+        Expr::If(cond, cons, alt) => eval_if_expr(*cond, *cons, alt),
         _ => None,
     }
 }
@@ -90,5 +98,28 @@ fn eval_minus_operator_expr(right: Object) -> Object {
         Object::Int(-val)
     } else {
         Object::Null
+    }
+}
+
+fn eval_if_expr(cond: Expr, cons: Stmt, alt: Option<Box<Stmt>>) -> Option<Object> {
+    let cond_obj = eval_expr(cond);
+
+    if is_truthy(cond_obj) {
+        return eval_stmt(cons);
+    };
+
+    if let Some(stmt) = alt {
+        return eval_stmt(*stmt);
+    };
+
+    None
+}
+
+fn is_truthy(obj: Option<Object>) -> bool {
+    match obj {
+        Some(Object::Null) => false,
+        Some(Object::Bool(true)) => true,
+        Some(Object::Bool(false)) => false,
+        _ => true,
     }
 }

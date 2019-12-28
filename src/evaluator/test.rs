@@ -12,22 +12,6 @@ fn test_eval(input: &str) -> Option<Object> {
     return eval(program);
 }
 
-fn test_int_obj(obj: Object, expect: i64) {
-    if let Object::Int(val) = obj {
-        assert_eq!(val, expect);
-    } else {
-        unreachable!();
-    }
-}
-
-fn test_bool_obj(obj: Object, expect: bool) {
-    if let Object::Bool(val) = obj {
-        assert_eq!(val, expect);
-    } else {
-        unreachable!()
-    }
-}
-
 #[test]
 fn test_eval_int_expr() {
     let test_cases = vec![
@@ -49,8 +33,8 @@ fn test_eval_int_expr() {
     ];
 
     for (input, expect) in test_cases {
-        let evaluated = test_eval(input).unwrap();
-        test_int_obj(evaluated, expect);
+        let evaluated = test_eval(input);
+        assert_eq!(evaluated, Some(Object::Int(expect)));
     }
 }
 
@@ -79,8 +63,8 @@ fn test_eval_bool_expr() {
     ];
 
     for (input, expect) in test_cases {
-        let evaluated = test_eval(input).unwrap();
-        test_bool_obj(evaluated, expect);
+        let evaluated = test_eval(input);
+        assert_eq!(evaluated, Some(Object::Bool(expect)));
     }
 }
 
@@ -96,7 +80,29 @@ fn test_bang_operator() {
     ];
 
     for (input, expect) in test_cases {
-        let evaluated = test_eval(input).unwrap();
-        test_bool_obj(evaluated, expect);
+        let evaluated = test_eval(input);
+        assert_eq!(evaluated, Some(Object::Bool(expect)));
+    }
+}
+
+#[test]
+fn test_if_else_expr() {
+    let test_cases = vec![
+        ("if (true) { 10 }", Some(10)),
+        ("if (false) { 10 }", None),
+        ("if (1) { 10 }", Some(10)),
+        ("if (1 < 2) { 10 }", Some(10)),
+        ("if (1 > 2) { 10 }", None),
+        ("if (1 > 2) { 10 } else { 20 }", Some(20)),
+        ("if (1 < 2) { 10 } else { 20 }", Some(10)),
+    ];
+
+    for (input, expect) in test_cases {
+        let evaluated = test_eval(input);
+        if let Some(v) = expect {
+            assert_eq!(evaluated, Some(Object::Int(v)))
+        } else {
+            assert_eq!(evaluated, None)
+        }
     }
 }
