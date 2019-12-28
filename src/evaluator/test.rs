@@ -106,3 +106,19 @@ fn test_if_else_expr() {
         }
     }
 }
+
+#[test]
+fn test_return_stmt() {
+    let test_cases = vec![
+        ("return 10;", 10),
+        ("return 10; 9;", 10),
+        ("return 2 * 5; 9;", 10),
+        ("return 10;", 10),
+        ("9; return 2 * 5; 9;;", 10),
+    ];
+
+    for (input, expect) in test_cases {
+        let evaluated = test_eval(input);
+        assert_eq!(evaluated, Some(Object::Int(expect)))
+    }
+}

@@ -4,9 +4,17 @@ use crate::object::Object;
 mod test;
 
 pub fn eval(p: Program) -> Option<Object> {
+    eval_stmts(p.statements)
+}
+
+fn eval_stmts(stmts: Vec<Stmt>) -> Option<Object> {
     let mut result = None;
-    for stmt in p.statements {
-        result = eval_stmt(stmt)
+    for stmt in stmts {
+        result = eval_stmt(stmt);
+
+        if let Some(Object::Return(box val)) = result {
+            return val;
+        };
     }
     result
 }
@@ -14,12 +22,10 @@ pub fn eval(p: Program) -> Option<Object> {
 fn eval_stmt(stmt: Stmt) -> Option<Object> {
     match stmt {
         Stmt::Expr(expr) => eval_expr(expr),
-        Stmt::Block(stmts) => {
-            let mut result = None;
-            for stmt in stmts {
-                result = eval_stmt(stmt)
-            }
-            result
+        Stmt::Block(stmts) => eval_stmts(stmts),
+        Stmt::Return(expr) => {
+            let val = eval_expr(expr);
+            Some(Object::Return(Box::new(val)))
         }
         _ => None,
     }
