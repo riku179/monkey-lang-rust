@@ -1,6 +1,5 @@
 use crate::ast::{Expr, Ident, Infix, Literal, Prefix, Program, Stmt};
 use crate::object::Object;
-use std::fmt::{Debug, Display};
 
 mod test;
 
@@ -81,7 +80,6 @@ fn eval_int_infix_expr(operator: Infix, left: i64, right: i64) -> Object {
         Infix::GreaterThan => Object::Bool(left > right),
         Infix::Equal => Object::Bool(left == right),
         Infix::NotEqual => Object::Bool(left != right),
-        _ => unreachable!(),
     }
 }
 
