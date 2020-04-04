@@ -139,10 +139,10 @@ fn test_error_handling() {
         ("5 + true;", "type mismatch: INT + BOOLEAN"),
         ("5 + true; 5;", "type mismatch: INT + BOOLEAN"),
         ("-true", "unknown operator: -BOOLEAN"),
-        ("5; true + false;", "unknown operator BOOLEAN + BOOLEAN"),
+        ("5; true + false;", "unknown operator: BOOLEAN + BOOLEAN"),
         (
             "if (10 > 1) { true + false; }",
-            "unknown operator BOOLEAN + BOOLEAN",
+            "unknown operator: BOOLEAN + BOOLEAN",
         ),
         (
             r###"
@@ -153,7 +153,12 @@ fn test_error_handling() {
             return 1;
         }
         "###,
-            "unknown operator BOOLEAN + BOOLEAN",
+            "unknown operator: BOOLEAN + BOOLEAN",
         ),
     ];
+
+    for (input, expect) in test_cases {
+        let evaluated = test_eval(input);
+        assert_eq!(evaluated, Some(Object::Error(expect.to_string())))
+    }
 }

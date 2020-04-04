@@ -23,3 +23,16 @@ impl fmt::Display for Object {
         }
     }
 }
+
+impl Object {
+    pub fn get_type(&self) -> String {
+        match self {
+            Object::Int(_) => "INT",
+            Object::Bool(_) => "BOOLEAN",
+            Object::Return(_) => "RETURN",
+            Object::Error(_) => "ERROR",
+            Object::Null => "NULL",
+        }
+        .to_string()
+    }
+}

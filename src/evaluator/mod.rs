@@ -12,6 +12,10 @@ pub fn eval(p: Program) -> Option<Object> {
         if let Some(Object::Return(box val)) = result {
             return val;
         };
+
+        if let Some(err @ Object::Error(_)) = result {
+            return Some(err);
+        };
     }
 
     result
@@ -51,6 +55,10 @@ fn eval_block_stmt(block: Vec<Stmt>) -> Option<Object> {
         if let Some(Object::Return(_)) = result {
             return result;
         };
+
+        if let Some(Object::Error(_)) = result {
+            return result;
+        };
     }
     result
 }
@@ -66,7 +74,11 @@ fn eval_prefix_expr(operator: Prefix, right: Object) -> Object {
     match operator {
         Prefix::Not => eval_bang_operator_expr(right),
         Prefix::Minus => eval_minus_operator_expr(right),
-        _ => Object::Null,
+        _ => Object::Error(format!(
+            "unknown operator: {}{}",
+            operator,
+            right.get_type()
+        )),
     }
 }
 
@@ -75,13 +87,23 @@ fn eval_infix_expr(operator: Infix, left: Object, right: Object) -> Object {
         if let Object::Int(right_val) = right {
             eval_int_infix_expr(operator, left_val, right_val)
         } else {
-            unreachable!()
+            Object::Error(format!(
+                "type mismatch: {} {} {}",
+                left.get_type(),
+                operator,
+                right.get_type()
+            ))
         }
     } else {
         match operator {
             Infix::Equal => Object::Bool(left == right),
             Infix::NotEqual => Object::Bool(left != right),
-            _ => unreachable!(),
+            _ => Object::Error(format!(
+                "unknown operator: {} {} {}",
+                left.get_type(),
+                operator,
+                right.get_type()
+            )),
         }
     }
 }
@@ -111,7 +133,7 @@ fn eval_minus_operator_expr(right: Object) -> Object {
     if let Object::Int(val) = right {
         Object::Int(-val)
     } else {
-        Object::Null
+        Object::Error(format!("unknown operator: -{}", right.get_type()))
     }
 }
 
