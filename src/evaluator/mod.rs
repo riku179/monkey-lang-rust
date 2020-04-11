@@ -1,4 +1,4 @@
-use crate::ast::{Expr, Infix, Literal, Prefix, Program, Stmt};
+use crate::ast::{Expr, Ident, Infix, Literal, Prefix, Program, Stmt};
 use crate::object::{Env, Object};
 
 mod test;
@@ -28,8 +28,15 @@ fn eval_stmt(env: &mut Env, stmt: Stmt) -> Option<Object> {
         Stmt::Return(expr) => {
             let val = eval_expr(env, expr);
             Some(Object::Return(Box::new(val)))
-        }
-        _ => None,
+        },
+        Stmt::Let(ident, expr) => {
+            let val = eval_expr(env, expr);
+            if let Some(err @ Object::Error(_)) = val {
+                return Some(err);
+            };
+            env.insert(ident.0, val.unwrap());
+            None
+        },
     }
 }
 
@@ -43,7 +50,8 @@ fn eval_expr(env: &mut Env, expr: Expr) -> Option<Object> {
             eval_expr(env, *right)?,
         )),
         Expr::If(cond, cons, alt) => eval_if_expr(env, *cond, *cons, alt),
-        _ => None,
+        Expr::Ident(ident) => Some(eval_ident(env, ident)),
+        _ => Some(Object::Error(format!("invalid expr: {}", expr))),
     }
 }
 
@@ -157,5 +165,14 @@ fn is_truthy(obj: Option<Object>) -> bool {
         Some(Object::Bool(true)) => true,
         Some(Object::Bool(false)) => false,
         _ => true,
+    }
+}
+
+fn eval_ident(env: &mut Env, ident: Ident) -> Object {
+    let val = env.get(ident.0.clone());
+    if let Some(obj) = val {
+        obj.clone()
+    } else {
+        Object::Error(format!(r#"identifier not found: {}"#, ident))
     }
 }

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fmt;
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Object {
     Int(i64),
     Bool(bool),
@@ -54,7 +54,7 @@ impl Env {
         self.store.get(&key)
     }
 
-    pub fn insert(mut self, key: String, val: Object) -> Option<Object> {
+    pub fn insert(&mut self, key: String, val: Object) -> Option<Object> {
         self.store.insert(key, val)
     }
 }

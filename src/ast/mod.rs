@@ -24,7 +24,7 @@ impl Program {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Ident(pub String);
 
 impl fmt::Display for Ident {
