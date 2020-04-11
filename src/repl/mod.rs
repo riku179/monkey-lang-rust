@@ -1,5 +1,6 @@
 use crate::evaluator::eval;
 use crate::lexer::Lexer;
+use crate::object::Env;
 use crate::parser::Parser;
 use std::io;
 
@@ -11,6 +12,7 @@ where
     R: io::BufRead,
     W: io::Write,
 {
+    let mut env = Env::new();
     loop {
         write!(writer, "{}", PROMPT)?;
         writer.flush()?;
@@ -25,7 +27,7 @@ where
                 continue;
             }
 
-            if let Some(val) = eval(program) {
+            if let Some(val) = eval(program, &mut env) {
                 writeln!(writer, "{}", val)?
             }
         } else {

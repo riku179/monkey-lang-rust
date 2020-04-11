@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fmt;
 
 #[derive(Debug, PartialEq)]
@@ -34,5 +35,26 @@ impl Object {
             Object::Null => "NULL",
         }
         .to_string()
+    }
+}
+
+#[derive(PartialEq, Debug)]
+pub struct Env {
+    store: HashMap<String, Object>,
+}
+
+impl Env {
+    pub fn new() -> Env {
+        Env {
+            store: HashMap::new(),
+        }
+    }
+
+    pub fn get(&self, key: String) -> Option<&Object> {
+        self.store.get(&key)
+    }
+
+    pub fn insert(mut self, key: String, val: Object) -> Option<Object> {
+        self.store.insert(key, val)
     }
 }

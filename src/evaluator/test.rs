@@ -1,6 +1,6 @@
 use super::*;
 use crate::lexer::Lexer;
-use crate::object::Object;
+use crate::object::{Env, Object};
 use crate::parser::Parser;
 
 fn test_eval(input: &str) -> Option<Object> {
@@ -8,8 +8,9 @@ fn test_eval(input: &str) -> Option<Object> {
     let mut p = Parser::new(&mut l);
     let program = p.parse_program();
     println!("{:?}", program);
+    let mut env = Env::new();
 
-    eval(program)
+    eval(program, &mut env)
 }
 
 #[test]
@@ -155,10 +156,26 @@ fn test_error_handling() {
         "###,
             "unknown operator: BOOLEAN + BOOLEAN",
         ),
+        ("foobar", "identifier not found: foobar"),
     ];
 
     for (input, expect) in test_cases {
         let evaluated = test_eval(input);
         assert_eq!(evaluated, Some(Object::Error(expect.to_string())))
+    }
+}
+
+#[test]
+fn test_let_stmt() {
+    let test_cases = vec![
+        ("let a = 5; a;", 5),
+        ("let a = 5 * 5; a", 25),
+        ("let a = 5; let b = a; b;", 5),
+        ("let a = 5; let b = a; let c = a + b + 5; c;", 15),
+    ];
+
+    for (input, expect) in test_cases {
+        let evaluated = test_eval(input);
+        assert_eq!(evaluated, Some(Object::Int(expect)))
     }
 }

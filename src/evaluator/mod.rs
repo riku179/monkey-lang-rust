@@ -1,13 +1,13 @@
 use crate::ast::{Expr, Infix, Literal, Prefix, Program, Stmt};
-use crate::object::Object;
+use crate::object::{Env, Object};
 
 mod test;
 
-pub fn eval(p: Program) -> Option<Object> {
+pub fn eval(p: Program, env: &mut Env) -> Option<Object> {
     let mut result = None;
 
     for stmt in p.statements {
-        result = eval_stmt(stmt);
+        result = eval_stmt(env, stmt);
 
         if let Some(Object::Return(box val)) = result {
             return val;
@@ -21,36 +21,36 @@ pub fn eval(p: Program) -> Option<Object> {
     result
 }
 
-fn eval_stmt(stmt: Stmt) -> Option<Object> {
+fn eval_stmt(env: &mut Env, stmt: Stmt) -> Option<Object> {
     match stmt {
-        Stmt::Expr(expr) => eval_expr(expr),
-        Stmt::Block(stmts) => eval_block_stmt(stmts),
+        Stmt::Expr(expr) => eval_expr(env, expr),
+        Stmt::Block(stmts) => eval_block_stmt(env, stmts),
         Stmt::Return(expr) => {
-            let val = eval_expr(expr);
+            let val = eval_expr(env, expr);
             Some(Object::Return(Box::new(val)))
         }
         _ => None,
     }
 }
 
-fn eval_expr(expr: Expr) -> Option<Object> {
+fn eval_expr(env: &mut Env, expr: Expr) -> Option<Object> {
     match expr {
         Expr::Literal(literal) => Some(eval_literal(literal)),
-        Expr::Prefix(prefix, right) => Some(eval_prefix_expr(prefix, eval_expr(*right)?)),
+        Expr::Prefix(prefix, right) => Some(eval_prefix_expr(prefix, eval_expr(env, *right)?)),
         Expr::Infix(left, infix, right) => Some(eval_infix_expr(
             infix,
-            eval_expr(*left)?,
-            eval_expr(*right)?,
+            eval_expr(env, *left)?,
+            eval_expr(env, *right)?,
         )),
-        Expr::If(cond, cons, alt) => eval_if_expr(*cond, *cons, alt),
+        Expr::If(cond, cons, alt) => eval_if_expr(env, *cond, *cons, alt),
         _ => None,
     }
 }
 
-fn eval_block_stmt(block: Vec<Stmt>) -> Option<Object> {
+fn eval_block_stmt(env: &mut Env, block: Vec<Stmt>) -> Option<Object> {
     let mut result = None;
     for stmt in block {
-        result = eval_stmt(stmt);
+        result = eval_stmt(env, stmt);
 
         if let Some(Object::Return(_)) = result {
             return result;
@@ -137,15 +137,15 @@ fn eval_minus_operator_expr(right: Object) -> Object {
     }
 }
 
-fn eval_if_expr(cond: Expr, cons: Stmt, alt: Option<Box<Stmt>>) -> Option<Object> {
-    let cond_obj = eval_expr(cond);
+fn eval_if_expr(env: &mut Env, cond: Expr, cons: Stmt, alt: Option<Box<Stmt>>) -> Option<Object> {
+    let cond_obj = eval_expr(env, cond);
 
     if is_truthy(cond_obj) {
-        return eval_stmt(cons);
+        return eval_stmt(env, cons);
     };
 
     if let Some(stmt) = alt {
-        return eval_stmt(*stmt);
+        return eval_stmt(env, *stmt);
     };
 
     None
