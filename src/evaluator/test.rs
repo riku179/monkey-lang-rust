@@ -1,9 +1,9 @@
 use super::*;
 use crate::lexer::Lexer;
-use crate::object::{Env, Object};
+use crate::object::{Env, EvalError, EvalResult, Object};
 use crate::parser::Parser;
 
-fn test_eval(input: &str) -> Option<Object> {
+fn test_eval(input: &str) -> EvalResult<Object> {
     let mut l = Lexer::new(input.to_string()).unwrap();
     let mut p = Parser::new(&mut l);
     let program = p.parse_program();
@@ -35,7 +35,7 @@ fn test_eval_int_expr() {
 
     for (input, expect) in test_cases {
         let evaluated = test_eval(input);
-        assert_eq!(evaluated, Some(Object::Int(expect)));
+        assert_eq!(evaluated, EvalResult::Ok(Object::Int(expect)));
     }
 }
 
@@ -65,7 +65,7 @@ fn test_eval_bool_expr() {
 
     for (input, expect) in test_cases {
         let evaluated = test_eval(input);
-        assert_eq!(evaluated, Some(Object::Bool(expect)));
+        assert_eq!(evaluated, EvalResult::Ok(Object::Bool(expect)));
     }
 }
 
@@ -82,7 +82,7 @@ fn test_bang_operator() {
 
     for (input, expect) in test_cases {
         let evaluated = test_eval(input);
-        assert_eq!(evaluated, Some(Object::Bool(expect)));
+        assert_eq!(evaluated, EvalResult::Ok(Object::Bool(expect)));
     }
 }
 
@@ -101,8 +101,8 @@ fn test_if_else_expr() {
     for (input, expect) in test_cases {
         let evaluated = test_eval(input);
         match expect {
-            Some(v) => assert_eq!(evaluated, Some(Object::Int(v))),
-            _ => assert_eq!(evaluated, None),
+            Some(v) => assert_eq!(evaluated, EvalResult::Ok(Object::Int(v))),
+            _ => assert_eq!(evaluated, EvalResult::Ok(Object::Null)),
         }
     }
 }
@@ -130,7 +130,7 @@ fn test_return_stmt() {
 
     for (input, expect) in test_cases {
         let evaluated = test_eval(input);
-        assert_eq!(evaluated, Some(Object::Int(expect)))
+        assert_eq!(evaluated, EvalResult::Ok(Object::Int(expect)))
     }
 }
 
@@ -161,7 +161,7 @@ fn test_error_handling() {
 
     for (input, expect) in test_cases {
         let evaluated = test_eval(input);
-        assert_eq!(evaluated, Some(Object::Error(expect.to_string())))
+        assert_eq!(evaluated, EvalResult::Err(EvalError(expect.to_string())))
     }
 }
 
@@ -176,6 +176,6 @@ fn test_let_stmt() {
 
     for (input, expect) in test_cases {
         let evaluated = test_eval(input);
-        assert_eq!(evaluated, Some(Object::Int(expect)))
+        assert_eq!(evaluated, EvalResult::Ok(Object::Int(expect)))
     }
 }

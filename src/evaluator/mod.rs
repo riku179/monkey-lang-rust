@@ -1,74 +1,63 @@
 use crate::ast::{Expr, Ident, Infix, Literal, Prefix, Program, Stmt};
-use crate::object::{Env, Object};
+use crate::object::{Env, EvalError, EvalResult, Object};
 
 mod test;
 
-pub fn eval(p: Program, env: &mut Env) -> Option<Object> {
-    let mut result = None;
+pub fn eval(p: Program, env: &mut Env) -> EvalResult<Object> {
+    let mut result = Object::Null;
 
     for stmt in p.statements {
-        result = eval_stmt(env, stmt);
+        result = eval_stmt(env, stmt)?;
 
-        if let Some(Object::Return(box val)) = result {
-            return val;
-        };
-
-        if let Some(err @ Object::Error(_)) = result {
-            return Some(err);
+        if let Object::Return(box val) = result {
+            return Ok(val);
         };
     }
 
-    result
+    Ok(result)
 }
 
-fn eval_stmt(env: &mut Env, stmt: Stmt) -> Option<Object> {
+fn eval_stmt(env: &mut Env, stmt: Stmt) -> EvalResult<Object> {
     match stmt {
         Stmt::Expr(expr) => eval_expr(env, expr),
         Stmt::Block(stmts) => eval_block_stmt(env, stmts),
         Stmt::Return(expr) => {
             let val = eval_expr(env, expr);
-            Some(Object::Return(Box::new(val)))
-        },
+            val.map(|v| Object::Return(Box::new(v)))
+        }
         Stmt::Let(ident, expr) => {
-            let val = eval_expr(env, expr);
-            if let Some(err @ Object::Error(_)) = val {
-                return Some(err);
-            };
-            env.insert(ident.0, val.unwrap());
-            None
-        },
+            let val = eval_expr(env, expr)?;
+            env.insert(ident.0, val);
+            Ok(Object::Null)
+        }
     }
 }
 
-fn eval_expr(env: &mut Env, expr: Expr) -> Option<Object> {
+fn eval_expr(env: &mut Env, expr: Expr) -> EvalResult<Object> {
     match expr {
-        Expr::Literal(literal) => Some(eval_literal(literal)),
-        Expr::Prefix(prefix, right) => Some(eval_prefix_expr(prefix, eval_expr(env, *right)?)),
-        Expr::Infix(left, infix, right) => Some(eval_infix_expr(
-            infix,
-            eval_expr(env, *left)?,
-            eval_expr(env, *right)?,
-        )),
+        Expr::Literal(literal) => Ok(eval_literal(literal)),
+        Expr::Prefix(prefix, right) => eval_prefix_expr(prefix, eval_expr(env, *right)?),
+        Expr::Infix(left, infix, right) => {
+            eval_infix_expr(infix, eval_expr(env, *left)?, eval_expr(env, *right)?)
+        }
         Expr::If(cond, cons, alt) => eval_if_expr(env, *cond, *cons, alt),
-        Expr::Ident(ident) => Some(eval_ident(env, ident)),
-        _ => Some(Object::Error(format!("invalid expr: {}", expr))),
+        Expr::Ident(ident) => eval_ident(env, ident),
+        _ => Err(EvalError(format!("invalid expr: {}", expr))),
     }
 }
 
-fn eval_block_stmt(env: &mut Env, block: Vec<Stmt>) -> Option<Object> {
-    let mut result = None;
+fn eval_block_stmt(env: &mut Env, block: Vec<Stmt>) -> EvalResult<Object> {
+    let mut result = Object::Null;
+
     for stmt in block {
-        result = eval_stmt(env, stmt);
+        result = eval_stmt(env, stmt)?;
 
-        if let Some(Object::Return(_)) = result {
-            return result;
-        };
-
-        if let Some(Object::Error(_)) = result {
-            return result;
+        if let Object::Return(_) = result {
+            return Ok(result);
         };
     }
-    result
+
+    Ok(result)
 }
 
 fn eval_literal(literal: Literal) -> Object {
@@ -78,40 +67,40 @@ fn eval_literal(literal: Literal) -> Object {
     }
 }
 
-fn eval_prefix_expr(operator: Prefix, right: Object) -> Object {
+fn eval_prefix_expr(operator: Prefix, right: Object) -> EvalResult<Object> {
     match operator {
-        Prefix::Not => eval_bang_operator_expr(right),
+        Prefix::Not => Ok(eval_bang_operator_expr(right)),
         Prefix::Minus => eval_minus_operator_expr(right),
-        _ => Object::Error(format!(
+        _ => Err(EvalError(format!(
             "unknown operator: {}{}",
             operator,
             right.get_type()
-        )),
+        ))),
     }
 }
 
-fn eval_infix_expr(operator: Infix, left: Object, right: Object) -> Object {
+fn eval_infix_expr(operator: Infix, left: Object, right: Object) -> EvalResult<Object> {
     if let Object::Int(left_val) = left {
         if let Object::Int(right_val) = right {
-            eval_int_infix_expr(operator, left_val, right_val)
+            Ok(eval_int_infix_expr(operator, left_val, right_val))
         } else {
-            Object::Error(format!(
+            Err(EvalError(format!(
                 "type mismatch: {} {} {}",
                 left.get_type(),
                 operator,
                 right.get_type()
-            ))
+            )))
         }
     } else {
         match operator {
-            Infix::Equal => Object::Bool(left == right),
-            Infix::NotEqual => Object::Bool(left != right),
-            _ => Object::Error(format!(
+            Infix::Equal => Ok(Object::Bool(left == right)),
+            Infix::NotEqual => Ok(Object::Bool(left != right)),
+            _ => Err(EvalError(format!(
                 "unknown operator: {} {} {}",
                 left.get_type(),
                 operator,
                 right.get_type()
-            )),
+            ))),
         }
     }
 }
@@ -137,16 +126,24 @@ fn eval_bang_operator_expr(right: Object) -> Object {
     }
 }
 
-fn eval_minus_operator_expr(right: Object) -> Object {
+fn eval_minus_operator_expr(right: Object) -> EvalResult<Object> {
     if let Object::Int(val) = right {
-        Object::Int(-val)
+        Ok(Object::Int(-val))
     } else {
-        Object::Error(format!("unknown operator: -{}", right.get_type()))
+        Err(EvalError(format!(
+            "unknown operator: -{}",
+            right.get_type()
+        )))
     }
 }
 
-fn eval_if_expr(env: &mut Env, cond: Expr, cons: Stmt, alt: Option<Box<Stmt>>) -> Option<Object> {
-    let cond_obj = eval_expr(env, cond);
+fn eval_if_expr(
+    env: &mut Env,
+    cond: Expr,
+    cons: Stmt,
+    alt: Option<Box<Stmt>>,
+) -> EvalResult<Object> {
+    let cond_obj = eval_expr(env, cond)?;
 
     if is_truthy(cond_obj) {
         return eval_stmt(env, cons);
@@ -156,23 +153,23 @@ fn eval_if_expr(env: &mut Env, cond: Expr, cons: Stmt, alt: Option<Box<Stmt>>) -
         return eval_stmt(env, *stmt);
     };
 
-    None
+    Ok(Object::Null)
 }
 
-fn is_truthy(obj: Option<Object>) -> bool {
+fn is_truthy(obj: Object) -> bool {
     match obj {
-        Some(Object::Null) => false,
-        Some(Object::Bool(true)) => true,
-        Some(Object::Bool(false)) => false,
+        Object::Null => false,
+        Object::Bool(true) => true,
+        Object::Bool(false) => false,
         _ => true,
     }
 }
 
-fn eval_ident(env: &mut Env, ident: Ident) -> Object {
+fn eval_ident(env: &mut Env, ident: Ident) -> EvalResult<Object> {
     let val = env.get(ident.0.clone());
     if let Some(obj) = val {
-        obj.clone()
+        Ok(obj.clone())
     } else {
-        Object::Error(format!(r#"identifier not found: {}"#, ident))
+        Err(EvalError(format!(r#"identifier not found: {}"#, ident)))
     }
 }

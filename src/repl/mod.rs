@@ -27,8 +27,10 @@ where
                 continue;
             }
 
-            if let Some(val) = eval(program, &mut env) {
-                writeln!(writer, "{}", val)?
+            let val = eval(program, &mut env);
+            match val {
+                Ok(val) => writeln!(writer, "{}", val)?,
+                Err(val) => writeln!(writer, "[ERROR] {}", val)?,
             }
         } else {
             writeln!(writer, "[ERROR] please input only ASCII string").unwrap();
