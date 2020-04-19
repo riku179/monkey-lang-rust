@@ -1,4 +1,4 @@
-use crate::ast::{Expr, Ident, Infix, Literal, Prefix, Program, Stmt};
+use crate::ast::{BlockStmt, Expr, Ident, Infix, Literal, Prefix, Program, Stmt};
 use crate::lexer::Lexer;
 use crate::token::Token;
 
@@ -239,7 +239,7 @@ impl<'a> Parser<'a> {
             return None;
         }
 
-        let cons = self.parse_block_stmt();
+        let cons = Stmt::Block(self.parse_block_stmt());
 
         let alter = if self.peek_token_is(&Token::ELSE) {
             self.next_token();
@@ -247,7 +247,7 @@ impl<'a> Parser<'a> {
             if !self.expect_peek(&Token::LBRACE) {
                 return None;
             }
-            Some(Box::new(self.parse_block_stmt()))
+            Some(Box::new(Stmt::Block(self.parse_block_stmt())))
         } else {
             None
         };
@@ -255,7 +255,7 @@ impl<'a> Parser<'a> {
         Some(Expr::If(Box::new(cond), Box::new(cons), alter))
     }
 
-    fn parse_block_stmt(&mut self) -> Stmt {
+    fn parse_block_stmt(&mut self) -> BlockStmt {
         self.next_token();
 
         let mut stmts = Vec::new();
@@ -266,7 +266,7 @@ impl<'a> Parser<'a> {
             self.next_token();
         }
 
-        Stmt::Block(stmts)
+        stmts
     }
 
     fn parse_function_literal(&mut self) -> Option<Expr> {
@@ -278,7 +278,7 @@ impl<'a> Parser<'a> {
         if !self.expect_peek(&Token::LBRACE) {
             None
         } else {
-            Some(Expr::Function(params, Box::new(self.parse_block_stmt())))
+            Some(Expr::Function(params, self.parse_block_stmt()))
         }
     }
 

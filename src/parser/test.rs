@@ -270,7 +270,7 @@ fn test_function_literal_parse() {
     check_parser_errors(p);
     check_stmt_len(&program, 1);
 
-    if let Stmt::Expr(Expr::Function(params, box Stmt::Block(stmts))) = &program.statements[0] {
+    if let Stmt::Expr(Expr::Function(params, stmts)) = &program.statements[0] {
         assert_eq!(params.len(), 2);
         assert_eq!(params[0].0, "x");
         assert_eq!(params[1].0, "y");

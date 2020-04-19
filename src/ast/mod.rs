@@ -33,12 +33,12 @@ impl fmt::Display for Ident {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum Stmt {
     Let(Ident, Expr),
     Return(Expr),
     Expr(Expr),
-    Block(Vec<Stmt>),
+    Block(BlockStmt),
 }
 
 impl fmt::Display for Stmt {
@@ -58,15 +58,17 @@ impl fmt::Display for Stmt {
     }
 }
 
-#[derive(PartialEq, Debug)]
+pub type BlockStmt = Vec<Stmt>;
+
+#[derive(Clone, PartialEq, Debug)]
 pub enum Expr {
     Ident(Ident),
     Literal(Literal),
-    Prefix(Prefix, Box<Expr>),
-    Infix(Box<Expr>, Infix, Box<Expr>),
-    If(Box<Expr>, Box<Stmt>, Option<Box<Stmt>>),
-    Function(Vec<Ident>, Box<Stmt>),
-    Call(Box<Expr>, Vec<Expr>),
+    Prefix(Prefix, Box<Expr>),                   // (prefix, expr)
+    Infix(Box<Expr>, Infix, Box<Expr>),          // (left, infix, right)
+    If(Box<Expr>, Box<Stmt>, Option<Box<Stmt>>), // (cond, cons, alter)
+    Function(Vec<Ident>, BlockStmt),             // (args, body)
+    Call(Box<Expr>, Vec<Expr>),                  // (function, args)
 }
 
 impl fmt::Display for Expr {
@@ -86,11 +88,19 @@ impl fmt::Display for Expr {
             Expr::Function(params, body) => {
                 let params_string: Vec<String> =
                     params.iter().map(|param| param.0.clone()).collect();
-                write!(f, "fn ({}) {}", params_string.join(", "), body)
+                write!(
+                    f,
+                    "fn ({}) {{\n {} }}",
+                    params_string.join(", "),
+                    body.iter()
+                        .map(|stmt| format!("{}", stmt))
+                        .collect::<Vec<String>>()
+                        .join("\n")
+                )
             }
-            Expr::Call(box func, params) => {
+            Expr::Call(box func, args) => {
                 let params_string: Vec<String> =
-                    params.iter().map(|param| format!("{}", param)).collect();
+                    args.iter().map(|param| format!("{}", param)).collect();
                 write!(f, "{}({})", func, params_string.join(", "))
             }
         }
@@ -112,7 +122,7 @@ impl fmt::Display for Literal {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum Prefix {
     Plus,
     Minus,
@@ -140,7 +150,7 @@ impl fmt::Display for Prefix {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum Infix {
     Plus,
     Minus,

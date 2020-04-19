@@ -1,6 +1,6 @@
 use super::*;
 use crate::lexer::Lexer;
-use crate::object::{Env, EvalError, EvalResult, Object};
+use crate::object::{Env, EvalResult, Object};
 use crate::parser::Parser;
 
 fn test_eval(input: &str) -> EvalResult<Object> {
@@ -178,4 +178,43 @@ fn test_let_stmt() {
         let evaluated = test_eval(input);
         assert_eq!(evaluated, EvalResult::Ok(Object::Int(expect)))
     }
+}
+
+#[test]
+fn test_function_obj() {
+    let input = "fn(x) { x + 2; };";
+
+    if let Object::Func(func) = test_eval(input).expect("sucess evaluation") {
+        assert_eq!(format!("{}", func), "fn (x) { (x + 2) }")
+    } else {
+        unreachable!();
+    };
+}
+
+#[test]
+fn test_function_application() {
+    let test_cases = vec![
+        ("let identity = fn(x) { x; }; identity(5)", 5),
+        ("let identity = fn(x) { return x; }; identity(5)", 5),
+        ("let double = fn(x) { x * 2; }; double(5)", 10),
+        ("let add = fn(x, y) { x + y; }; add(5, 5)", 10),
+        ("let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5))", 20),
+        ("fn(x) { x; }(5)", 5),
+    ];
+
+    for (input, expect) in test_cases {
+        let evaluated = test_eval(input);
+        assert_eq!(evaluated, EvalResult::Ok(Object::Int(expect)))
+    }
+}
+
+#[test]
+fn test_closures() {
+    let input = r#"
+        let newAdder = fn(x) { fn(y) { x + y } };
+        let addTwo = newAdder(2);
+        addTwo(2);
+    "#;
+
+    assert_eq!(test_eval(input), EvalResult::Ok(Object::Int(4)))
 }

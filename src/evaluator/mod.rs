@@ -1,5 +1,5 @@
 use crate::ast::{Expr, Ident, Infix, Literal, Prefix, Program, Stmt};
-use crate::object::{Env, EvalError, EvalResult, Object};
+use crate::object::{Env, EvalError, EvalResult, Func, Object};
 
 mod test;
 
@@ -42,7 +42,20 @@ fn eval_expr(env: &mut Env, expr: Expr) -> EvalResult<Object> {
         }
         Expr::If(cond, cons, alt) => eval_if_expr(env, *cond, *cons, alt),
         Expr::Ident(ident) => eval_ident(env, ident),
-        _ => Err(EvalError(format!("invalid expr: {}", expr))),
+        Expr::Function(idents, stmts) => Ok(Object::Func(Func {
+            args: idents,
+            body: stmts,
+            env: env.clone(),
+        })),
+        Expr::Call(box func_expr, args) => {
+            let func_obj = eval_expr(env, func_expr)?;
+            let args = args
+                .into_iter()
+                .map(|arg| eval_expr(env, arg))
+                .collect::<EvalResult<Vec<Object>>>()?;
+            let func = cast_obj_to_func(func_obj)?;
+            apply_function(func, args)
+        }
     }
 }
 
@@ -165,11 +178,47 @@ fn is_truthy(obj: Object) -> bool {
     }
 }
 
-fn eval_ident(env: &mut Env, ident: Ident) -> EvalResult<Object> {
+fn eval_ident(env: &Env, ident: Ident) -> EvalResult<Object> {
     let val = env.get(ident.0.clone());
     if let Some(obj) = val {
         Ok(obj.clone())
     } else {
         Err(EvalError(format!(r#"identifier not found: {}"#, ident)))
+    }
+}
+
+fn apply_function(func: Func, args: Vec<Object>) -> EvalResult<Object> {
+    let mut wrapped_env = wrap_function_env(&func, args);
+    let evaluated = eval_block_stmt(&mut wrapped_env, func.body)?;
+
+    Ok(unwrap_return_value(evaluated))
+}
+
+fn wrap_function_env(func: &Func, args: Vec<Object>) -> Env {
+    let mut env = Env::wrap(func.env.clone());
+
+    func.args
+        .iter()
+        .zip(args.into_iter())
+        .for_each(|(arg_name, arg_value)| {
+            env.insert(arg_name.0.clone(), arg_value);
+        });
+
+    env
+}
+
+fn cast_obj_to_func(obj: Object) -> EvalResult<Func> {
+    if let Object::Func(func) = obj {
+        Ok(func)
+    } else {
+        Err(EvalError(format!("'{}' is not function object", obj)))
+    }
+}
+
+fn unwrap_return_value(obj: Object) -> Object {
+    if let Object::Return(box value) = obj {
+        return value;
+    } else {
+        obj
     }
 }
