@@ -1,6 +1,7 @@
 use crate::ast::{Expr, Ident, Infix, Literal, Prefix, Program, Stmt};
 use crate::object::{Env, EvalError, EvalResult, Func, Object};
 
+#[cfg(test)]
 mod test;
 
 pub fn eval(p: Program, env: &mut Env) -> EvalResult<Object> {

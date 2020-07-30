@@ -5,6 +5,7 @@ use crate::token::Token;
 #[cfg(test)]
 mod test;
 
+#[cfg(test)]
 mod test_util;
 
 #[derive(PartialOrd, PartialEq)]

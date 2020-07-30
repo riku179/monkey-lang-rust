@@ -3,7 +3,6 @@ use std::fmt;
 #[derive(PartialEq, Clone, Debug)]
 pub enum Token {
     // Special token
-    ILLEGAL,
     EOF,
 
     // Identifiers + literals
@@ -47,7 +46,6 @@ pub enum Token {
 impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Token::ILLEGAL => write!(f, "ILLEGAL"),
             Token::EOF => write!(f, "EOF"),
             Token::IDENT(val) => write!(f, "{}", val),
             Token::INT(val) => write!(f, "{}", val),
